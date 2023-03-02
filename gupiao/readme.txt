@@ -1,0 +1,3 @@
+STATUS 状态
+DYNA 动态
+TICK 成交
