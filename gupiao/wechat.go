@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/eatmoreapple/openwechat"
 	"github.com/skip2/go-qrcode"
 )
@@ -19,7 +20,11 @@ func messageHandler(msg *openwechat.Message) {
 			msg.ReplyText("pong")
 			return
 		}
-		HandleMessage(msg.RawContent)
+		if HandleMessage(msg.RawContent) {
+			msg.ReplyText("鸡哥是最厉害的")
+		} else {
+			msg.ReplyText("哎呀 你干嘛!")
+		}
 	} else {
 		fmt.Println("recv ", msg)
 	}

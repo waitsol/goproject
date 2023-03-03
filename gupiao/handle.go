@@ -20,17 +20,17 @@ func stringSplit(text string, ic byte) []string {
 	}
 	return vs
 }
-func HandleMessage(msg string) string {
+func HandleMessage(msg string) bool {
 	v := stringSplit(msg, ' ')
 	if len(v) == 0 {
-		return "哎呀,你干嘛"
+		return false
 	}
 	if v[0] == "a" {
 		return add(v)
 	} else if v[0] == "d" {
 		return del(v)
 	}
-	return "哎呀,你干嘛"
+	return false
 
 }
 func checkGpNum(s string) bool {
@@ -45,10 +45,27 @@ func checkGpNum(s string) bool {
 	return true
 }
 
-func add(v []string) string {
-	if len(v) >= 2 {
+func add(v []string) bool {
+	if len(v) == 3 {
 		if checkGpNum(v[1]) {
 			data := Data_json{
+				SubType:     "SUBON",
+				Inst:        v[1],
+				Market:      v[2],
+				ServiceType: "STATISTICS",
+				ReqID:       1,
+			}
+			Post(data)
+
+			data = Data_json{
+				SubType:     "SUBON",
+				Inst:        v[1],
+				Market:      v[2],
+				ServiceType: "STATIC",
+				ReqID:       1,
+			}
+			Post(data)
+			data = Data_json{
 				SubType:     "SUBON",
 				Inst:        v[1],
 				Market:      v[2],
@@ -56,18 +73,19 @@ func add(v []string) string {
 				ReqID:       1,
 			}
 			Post(data)
+
 		}
 	}
 
-	return "哎呀,你干嘛"
+	return true
 
 }
 
-func del(v []string) string {
+func del(v []string) bool {
 	if len(v) >= 2 {
 		if checkGpNum(v[1]) {
 
 		}
 	}
-	return "哎呀,你干嘛"
+	return false
 }

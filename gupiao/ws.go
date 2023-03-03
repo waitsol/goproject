@@ -3,171 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const OneHand = 100
 
 var reqid int32 = 1
 var mName2Ratio map[string]float64
+var mName2BaseData map[string]StatisticType
+var mName2Info map[string]StaticType
 var cconn *websocket.Conn
 
-type Data_json struct {
-	SubType     string `json:"SubType"`
-	ReqID       int    `json:"ReqID"`
-	Inst        string `json:"Inst"`
-	Market      string `json:"Market"`
-	ServiceType string `json:"ServiceType"`
-}
-
-type Daya_json struct {
-	OrgCode string `json:"OrgCode"`
-	Token   string `json:"Token"`
-	AppName string `json:"AppName"`
-	AppVer  string `json:"AppVer"`
-	AppType string `json:"AppType"`
-	Tag     string `json:"Tag"`
-}
-type DynaType struct {
-	TradingDay     int       `json:"TradingDay"`
-	Time           int       `json:"Time"`
-	HighestPrice   float64   `json:"HighestPrice"`
-	LowestPrice    float64   `json:"LowestPrice"`
-	LastPrice      float64   `json:"LastPrice"`
-	Volume         int       `json:"Volume"`
-	Amount         float64   `json:"Amount"`
-	TickCount      int       `json:"TickCount"`
-	BuyPrice       []float64 `json:"BuyPrice"`
-	BuyVolume      []int     `json:"BuyVolume"`
-	SellPrice      []float64 `json:"SellPrice"`
-	SellVolume     []int     `json:"SellVolume"`
-	AveragePrice   float64   `json:"AveragePrice"`
-	Wk52High       float64   `json:"Wk52High"`
-	Wk52Low        float64   `json:"Wk52Low"`
-	PERatio        float64   `json:"PERatio"`
-	OrderDirection int       `json:"OrderDirection"`
-	BidPrice       float64   `json:"BidPrice"`
-	AskPrice       float64   `json:"AskPrice"`
-	TurnoverRate   float64   `json:"TurnoverRate"`
-	SA             float64   `json:"SA"`
-	LimitUp        float64   `json:"LimitUp"`
-	LimitDown      float64   `json:"LimitDown"`
-	CirStock       float64   `json:"CirStock"`
-	TotStock       float64   `json:"TotStock"`
-	CirVal         float64   `json:"CirVal"`
-	TotVal         float64   `json:"TotVal"`
-	NAV            float64   `json:"NAV"`
-	Ratio          float64   `json:"Ratio"`
-	Committee      float64   `json:"Committee"`
-	PES            float64   `json:"PES"`
-	WP             int       `json:"WP"`
-	NP             int       `json:"NP"`
-	LastTradeVol   int       `json:"LastTradeVol"`
-	YearUpDown     float64   `json:"YearUpDown"`
-	KindsUpdown    struct {
-		FiveMinsUpdown  float64 `json:"FiveMinsUpdown"`
-		ThreeMinsUpdown float64 `json:"ThreeMinsUpdown"`
-		OneMinsUpdown   int     `json:"OneMinsUpdown"`
-		MinUpdown2      int     `json:"MinUpdown2"`
-		MinUpdown4      int     `json:"MinUpdown4"`
-	} `json:"KindsUpdown"`
-	Updown               float64 `json:"Updown"`
-	NextDayPreClosePrice float64 `json:"NextDayPreClosePrice"`
-	ExchangeID           string  `json:"ExchangeID"`
-	InstrumentID         string  `json:"InstrumentID"`
-	TTM                  float64 `json:"TTM"`
-}
-type TickType struct {
-	TradingDay int     `json:"TradingDay"`
-	ID         int     `json:"ID"`
-	Time       int     `json:"Time"`
-	Price      float64 `json:"Price"`
-	Volume     int     `json:"Volume"`
-	Property   int     `json:"Property"`
-	Virtual    int     `json:"virtual"`
-}
-type InstStatusType struct {
-	StatusType   int    `json:"StatusType"`
-	ExchangeID   string `json:"ExchangeID"`
-	InstrumentID string `json:"InstrumentID"`
-}
-type KlineType struct {
-	TradingDay int     `json:"TradingDay"`
-	Time       int     `json:"Time"`
-	High       float64 `json:"High"`
-	Open       float64 `json:"Open"`
-	Low        float64 `json:"Low"`
-	Close      float64 `json:"Close"`
-	Volume     int     `json:"Volume"`
-	Amount     float64 `json:"Amount"`
-	TickCount  int     `json:"TickCount"`
-}
-type StatisticType struct {
-	TradingDay int `json:"TradingDay"`
-	//昨天价格
-	PreClosePrice float64 `json:"PreClosePrice"`
-	//开盘价
-	OpenPrice       float64 `json:"OpenPrice"`
-	UpperLimitPrice float64 `json:"UpperLimitPrice"`
-	LowerLimitPrice float64 `json:"LowerLimitPrice"`
-	ExchangeID      string  `json:"ExchangeID"`
-	InstrumentID    string  `json:"InstrumentID"`
-}
-
-type MinType struct {
-	TradingDay       int     `json:"TradingDay"`
-	Time             int     `json:"Time"`
-	Price            float64 `json:"Price"`
-	Volume           int     `json:"Volume"`
-	UnmismatchVolume int     `json:"UnmismatchVolume,omitempty"`
-	UnmismatchFlag   int     `json:"UnmismatchFlag,omitempty"`
-}
-type dataRes struct {
-	Market      string `json:"Market"`
-	Inst        string `json:"Inst"`
-	ServiceType string `json:"ServiceType"`
-	SubType     string `json:"SubType"`
-	ReqID       int    `json:"ReqID"`
-	QuoteData   struct {
-		//动态数据
-		DynaData []DynaType `json:"DynaData"`
-		//交易买单
-		TickData []TickType `json:"TickData"`
-		//
-		InstStatusData []InstStatusType `json:"InstStatusData"`
-		KlineData      []KlineType      `json:"KlineData"`
-		StatisticsData []StatisticType  `json:"StatisticsData"`
-		//早盘
-		MinData []MinType `json:"MinData"`
-	} `json:"QuoteData"`
-}
-type PingType struct {
-	ServiceType string `json:"ServiceType"`
-}
-type Pong struct {
-	Code    string `json:"Code"`
-	Message string `json:"Message"`
-}
-type T struct {
-	Market      string `json:"Market"`
-	Inst        string `json:"Inst"`
-	ServiceType string `json:"ServiceType"`
-	SubType     string `json:"SubType"`
-	ReqID       int    `json:"ReqID"`
-	QuoteData   struct {
-		TickData []struct {
-			TradingDay int     `json:"TradingDay"`
-			ID         int     `json:"ID"`
-			Time       int     `json:"Time"`
-			Price      float64 `json:"Price"`
-			Volume     int     `json:"Volume"`
-			Property   int     `json:"Property"`
-			Virtual    int     `json:"virtual"`
-		} `json:"TickData"`
-	} `json:"QuoteData"`
+func getRa(cur, base float64) float64 {
+	return (cur - base) / base * 100
 }
 
 func Ping(conn *websocket.Conn) {
@@ -181,11 +33,26 @@ func Ping(conn *websocket.Conn) {
 
 	}
 }
+
 func handleTick(r dataRes) {
+	smsg := ""
+	if info, ok := mName2Info[r.Inst]; ok {
+		smsg = info.InstrumentName + "\n"
+	}
+	b := false
 	for _, x := range r.QuoteData.TickData {
 		if x.Volume > 200*OneHand {
-			SendMsg("wm", fmt.Sprintf("%s   %g   %d\n", r.Inst, x.Price, x.Volume/OneHand))
+			base := x.Price
+			if sts, ok := mName2BaseData[r.Inst]; ok {
+				base = sts.PreClosePrice
+			}
+			b = true
+			smsg += fmt.Sprintf("%s   %g   %d  %.2f%%\n", r.Inst, x.Price, x.Volume/OneHand, getRa(x.Price, base))
 		}
+	}
+	if b {
+		SendMsg("wm", smsg)
+		SendMsg("zbl", smsg)
 	}
 }
 func handleDyna(r dataRes) {
@@ -195,6 +62,16 @@ func handleDyna(r dataRes) {
 		} else {
 			mName2Ratio[r.Inst] = x.LastPrice
 		}
+	}
+}
+func handleSTATISTICS(r dataRes) {
+	for _, x := range r.QuoteData.StatisticsData {
+		mName2BaseData[r.Inst] = x
+	}
+}
+func handleStatic(r dataRes) {
+	for _, x := range r.QuoteData.StaticData {
+		mName2Info[r.Inst] = x
 	}
 }
 func Post(dataJson Data_json) {
@@ -208,10 +85,19 @@ func handleRes(r dataRes) {
 		handleTick(r)
 	} else if r.ServiceType == "DYNA" {
 
+	} else if r.ServiceType == "STATISTICS" {
+		handleSTATISTICS(r)
+	} else if r.ServiceType == "STATIC" {
+		handleStatic(r)
 	}
 
 }
+func InitWs() {
+	mName2Ratio = map[string]float64{}
+	mName2BaseData = map[string]StatisticType{}
+	mName2Info = map[string]StaticType{}
 
+}
 func Run() {
 
 	header := http.Header{
@@ -228,7 +114,6 @@ func Run() {
 	conn, res, err := dl.Dial(url, header)
 	//conn, res, err := websocket.DefaultDialer.Dial(url, header)
 	fmt.Println("res ", res)
-	mName2Ratio = map[string]float64{}
 	if err != nil {
 		fmt.Println(header)
 		fmt.Println("建立链接失败！！", err)
@@ -236,7 +121,7 @@ func Run() {
 	} else {
 		fmt.Println("connect success")
 	}
-
+	InitWs()
 	daya := Daya_json{
 		OrgCode: "rh",
 		Token:   "e9252a64-6ac8-4bf8-9725-6f106f682908",
