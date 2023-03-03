@@ -36,6 +36,7 @@ func Ping(conn *websocket.Conn) {
 
 func handleTick(r dataRes) {
 	smsg := ""
+<<<<<<< HEAD
 	if info, ok := mName2Info[r.Inst]; ok {
 		smsg = info.InstrumentName + "\n"
 	}
@@ -53,6 +54,15 @@ func handleTick(r dataRes) {
 	if b {
 		SendMsg("wm", smsg)
 		SendMsg("zbl", smsg)
+=======
+	for _, x := range r.QuoteData.TickData {
+		if x.Volume > 200*OneHand {
+			smsg += fmt.Sprintf("%s   %g   %d\n", r.Inst, x.Price, x.Volume/OneHand)
+		}
+	}
+	if len(smsg) > 0 {
+		SendMsg("wm", smsg)
+>>>>>>> 30d2362414d21c5121056cb48307384adae38a2f
 	}
 }
 func handleDyna(r dataRes) {
