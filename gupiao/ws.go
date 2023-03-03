@@ -182,10 +182,14 @@ func Ping(conn *websocket.Conn) {
 	}
 }
 func handleTick(r dataRes) {
+	smsg := ""
 	for _, x := range r.QuoteData.TickData {
 		if x.Volume > 200*OneHand {
-			SendMsg("wm", fmt.Sprintf("%s   %g   %d\n", r.Inst, x.Price, x.Volume/OneHand))
+			smsg += fmt.Sprintf("%s   %g   %d\n", r.Inst, x.Price, x.Volume/OneHand)
 		}
+	}
+	if len(smsg) > 0 {
+		SendMsg("wm", smsg)
 	}
 }
 func handleDyna(r dataRes) {
