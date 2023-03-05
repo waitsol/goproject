@@ -19,8 +19,8 @@ type Daya_json struct {
 type DynaType struct {
 	TradingDay     int       `json:"TradingDay"`
 	Time           int       `json:"Time"`
-	HighestPrice   float64   `json:"HighestPrice"`
-	LowestPrice    float64   `json:"LowestPrice"`
+	HighestPrice   float64   `json:"HighestPrice"` //最高价格
+	LowestPrice    float64   `json:"LowestPrice"`  //最低价格
 	LastPrice      float64   `json:"LastPrice"`
 	Volume         int       `json:"Volume"`
 	Amount         float64   `json:"Amount"`
@@ -32,7 +32,7 @@ type DynaType struct {
 	AveragePrice   float64   `json:"AveragePrice"`
 	Wk52High       float64   `json:"Wk52High"`
 	Wk52Low        float64   `json:"Wk52Low"`
-	PERatio        float64   `json:"PERatio"`
+	PERatio        float64   `json:"PERatio"` //市盈率
 	OrderDirection int       `json:"OrderDirection"`
 	BidPrice       float64   `json:"BidPrice"`
 	AskPrice       float64   `json:"AskPrice"`
@@ -40,12 +40,12 @@ type DynaType struct {
 	SA             float64   `json:"SA"`
 	LimitUp        float64   `json:"LimitUp"`
 	LimitDown      float64   `json:"LimitDown"`
-	CirStock       float64   `json:"CirStock"`
-	TotStock       float64   `json:"TotStock"`
-	CirVal         float64   `json:"CirVal"`
-	TotVal         float64   `json:"TotVal"`
-	NAV            float64   `json:"NAV"`
-	Ratio          float64   `json:"Ratio"`
+	CirStock       float64   `json:"CirStock"` //流通股
+	TotStock       float64   `json:"TotStock"` //总股本
+	CirVal         float64   `json:"CirVal"`   //流通市值
+	TotVal         float64   `json:"TotVal"`   //总市值
+	NAV            float64   `json:"NAV"`      //市净利率
+	Ratio          float64   `json:"Ratio"`    //量比
 	Committee      float64   `json:"Committee"`
 	PES            float64   `json:"PES"`
 	WP             int       `json:"WP"`
@@ -87,7 +87,7 @@ type KlineType struct {
 	Low        float64 `json:"Low"`
 	Close      float64 `json:"Close"`
 	Volume     int     `json:"Volume"`
-	Amount     float64 `json:"Amount"`
+	Amount     float64 `json:"Amount"` //交易金额
 	TickCount  int     `json:"TickCount"`
 }
 type StatisticType struct {
@@ -177,4 +177,43 @@ type PingType struct {
 type Pong struct {
 	Code    string `json:"Code"`
 	Message string `json:"Message"`
+}
+type MsgType struct {
+	Id  string
+	Msg string
+}
+
+type VRaInnner struct {
+	t   int
+	val float64
+}
+type VRa struct {
+	q   []VRaInnner
+	n   int
+	sum float64
+}
+
+// 处理消息的程序是 单协程
+func (this *VRa) Push(r VRaInnner) {
+	this.q = append(this.q, r)
+	this.n += 1
+	this.sum += r.val
+	i := 0
+	tn := this.n
+	for ; i < tn; i++ {
+		if r.t-this.q[i].t > LB {
+			this.n--
+			this.sum -= this.q[i].val
+		} else {
+			break
+		}
+	}
+	this.q = this.q[i:tn]
+}
+
+func (this *VRa) GetAvg() float64 {
+	if this.n == 0 {
+		return 100000000
+	}
+	return this.sum / float64(this.n)
 }

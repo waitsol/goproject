@@ -1,23 +1,37 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+)
 
-var mNameFollor map[string]*Follow
+var mIdFollow map[string]*Follow
 
+type FollowSt struct {
+	WarnMsg int  `json:"WarnMsg"`
+	Ok      bool `json:"Ok"`
+}
 type Follow struct {
-	Id   map[string]int //关注的股票id
-	Name string
+	FollowsId map[string]*FollowSt `json:"FollowsId"` //关注的股票id
+	Id        string               `json:"Id"`
 }
 
 func (this *Follow) follow(id string) {
-	if _, ok := this.Id[id]; ok {
-		Post(this.Name, id)
-		this.Id[id] = 400
-	} else {
+	//如果关注了
+	if x, ok := this.FollowsId[id]; ok && x.Ok {
 		//退出监听
-		delete(mId2Listener[id], this.Name)
-		delete(mNameFollor, this.Name)
+		delete(mId2Listener[id], this.Id)
+		delete(mIdFollow, this.Id)
+		this.FollowsId[id].Ok = false
+	} else {
+		if _, ok := this.FollowsId[id]; !ok {
+			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 400}
+		}
+		this.FollowsId[id].Ok = true
+
+		Post(this.Id, id)
 	}
+
+	SaveUserFollow(this.Id, *this)
 }
 
 func (this *Follow) HandleMessage(msg string) (bool, string) {
@@ -34,27 +48,30 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			if err != nil || x < 200 {
 				return true, "err " + v[2]
 			}
-			_, ok := this.Id[v[1]]
-			if !ok {
-				return true, "err " + v[1]
+			if this.FollowsId[v[1]] == nil {
+				this.FollowsId[v[1]] = &FollowSt{Ok: false}
 			}
-			this.Id[v[1]] = x
+			this.FollowsId[v[1]].WarnMsg = x * OneHand
 			return true, "ok"
 		} else {
 			return true, "err args"
 		}
+	} else if v[0] == "list" {
+		_sendMsg(this.Id, GetList(this.Id))
+	} else if v[0] == "clear" {
+		ClearFollowById(this.Id)
 	}
 	return false, ""
 }
-func getFoller(name string) *Follow {
-	if mNameFollor == nil {
-		mNameFollor = map[string]*Follow{}
+func getFollow(id string) *Follow {
+	if mIdFollow == nil {
+		mIdFollow = map[string]*Follow{}
 	}
-	if x, ok := mNameFollor[name]; ok {
+	if x, ok := mIdFollow[id]; ok {
 		return x
 	}
-	x := &Follow{Name: name}
-	mNameFollor[name] = x
+	x := GetUserFollow(id)
+	mIdFollow[id] = x
 	return x
 }
 
