@@ -164,7 +164,7 @@ func handleTick(r dataRes) {
 		mId2Tick[r.Inst] = append(mId2Tick[r.Inst], x)
 		tprice := x.Price * float64(x.Volume)
 
-		fmt.Println(tprice / ra.GetAvg())
+		//fmt.Println(tprice / ra.GetAvg())
 		if tprice/ra.GetAvg() >= WarnRatio {
 			bra = true
 		}
@@ -480,7 +480,7 @@ func RunWs() {
 		if err != nil {
 			fmt.Println("json.Unmarshal error ", err)
 		} else {
-			fmt.Printf("ws: %+v\n", r)
+			//fmt.Printf("ws: %+v\n", r)
 			handleRes(r)
 		}
 	}
