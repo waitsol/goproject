@@ -8,23 +8,28 @@ import (
 )
 
 var Mgr map[string]*openwechat.Friend
+var Self *openwechat.Self
 
 func messageHandler(msg *openwechat.Message) {
-	_, err := msg.Sender()
+	sender, err := msg.Sender()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	if msg.IsText() {
+	if msg.IsText() && sender.IsFriend() {
 		if msg.Content == "ping" {
 			msg.ReplyText("pong")
 			return
 		}
-		if HandleMessage(msg.RawContent) {
-			msg.ReplyText("鸡哥是最厉害的")
+		SendMsg("by2", "ss")
+		fmt.Println(sender.RemarkName, sender.NickName, sender == Self.User)
+		b, s := getFoller(sender.RemarkName).HandleMessage(msg.RawContent)
+		if b {
+			msg.ReplyText(s)
 		} else {
-			msg.ReplyText("哎呀 你干嘛!")
+			msg.ReplyText("aa")
 		}
+
 	} else {
 		fmt.Println("recv ", msg)
 	}
@@ -65,7 +70,7 @@ func Init() {
 		fmt.Println(err)
 		return
 	}
-
+	Self = self
 	fmt.Println(self)
 	friends, err := self.Friends()
 	if err != nil {
@@ -73,10 +78,11 @@ func Init() {
 		return
 	}
 	for _, f := range friends {
-		//	fmt.Println(f.RemarkName, f.Sex, f.NickName, f.UserName)
+		//fmt.Println(f.RemarkName, f.Sex, f.NickName, f.UserName)
+		fmt.Println(f.RemarkName, f.NickName)
 		Mgr[f.RemarkName] = f
 	}
-	go Run()
+	//go Run()
 
 	// 阻塞主程序,直到用户退出或发生异常
 	bot.Block()

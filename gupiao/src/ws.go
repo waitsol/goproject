@@ -12,11 +12,87 @@ import (
 
 const OneHand = 100
 
+type empty struct {
+}
+
 var reqid int32 = 1
-var mName2Ratio map[string]float64
-var mName2BaseData map[string]StatisticType
-var mName2Info map[string]StaticType
+var mId2Ratio map[string]float64
+
+// 开盘时间
+var mId2BaseData map[string]StatisticType
+
+// 基本信息
+var mId2ConstInfo map[string]StaticType
+
+// 监听者
+var mId2Listener map[string]map[string]empty
 var cconn *websocket.Conn
+
+func PostSTATISTICS(id string) {
+	addr := "sh"
+	dataJson := Data_json{
+		SubType:     "SUBON",
+		Inst:        id,
+		Market:      addr,
+		ServiceType: "STATISTICS",
+		ReqID:       int(atomic.AddInt32(&reqid, 1)),
+	}
+	cconn.WriteJSON(dataJson)
+	addr = "sz"
+	cconn.WriteJSON(dataJson)
+}
+func PostTick(id string) {
+	addr := "sh"
+	dataJson := Data_json{
+		SubType:     "SUBON",
+		Inst:        id,
+		Market:      addr,
+		ServiceType: "TICK",
+		ReqID:       int(atomic.AddInt32(&reqid, 1)),
+	}
+	cconn.WriteJSON(dataJson)
+	addr = "sz"
+	cconn.WriteJSON(dataJson)
+}
+func PostStatic(id string) {
+	addr := "sh"
+	dataJson := Data_json{
+		SubType:     "SUBON",
+		Inst:        id,
+		Market:      addr,
+		ServiceType: "STATIC",
+		ReqID:       int(atomic.AddInt32(&reqid, 1)),
+	}
+	cconn.WriteJSON(dataJson)
+	addr = "sz"
+	cconn.WriteJSON(dataJson)
+}
+func PostDyna(id string) {
+	addr := "sh"
+	dataJson := Data_json{
+		SubType:     "SUBON",
+		Inst:        id,
+		Market:      addr,
+		ServiceType: "DYNA",
+		ReqID:       int(atomic.AddInt32(&reqid, 1)),
+	}
+	cconn.WriteJSON(dataJson)
+	addr = "sz"
+	cconn.WriteJSON(dataJson)
+
+}
+
+func Post(name, id string) {
+	//当前没有post过
+	if _, ok := mId2ConstInfo[id]; !ok {
+		PostStatic(id)
+		PostDyna(id)
+		PostSTATISTICS(id)
+		PostTick(id)
+	} else {
+		mId2Listener[id][name] = empty{}
+	}
+}
 
 func getRa(cur, base float64) float64 {
 	return (cur - base) / base * 100
@@ -34,51 +110,64 @@ func Ping(conn *websocket.Conn) {
 	}
 }
 
+// 股票异动
 func handleTick(r dataRes) {
-	smsg := ""
-	if info, ok := mName2Info[r.Inst]; ok {
-		smsg = info.InstrumentName + "\n"
+	muban := ""
+	v := []int{}
+	str := []string{}
+	if info, ok := mId2ConstInfo[r.Inst]; ok {
+		muban = info.InstrumentName + "\n"
 	}
 	b := false
 	for _, x := range r.QuoteData.TickData {
 		if x.Volume > 200*OneHand {
 			base := x.Price
-			if sts, ok := mName2BaseData[r.Inst]; ok {
+			if sts, ok := mId2BaseData[r.Inst]; ok {
 				base = sts.PreClosePrice
 			}
 			b = true
-			smsg += fmt.Sprintf("%s   %g   %d  %.2f%%\n", r.Inst, x.Price, x.Volume/OneHand, getRa(x.Price, base))
+			v = append(v, x.Volume)
+			str = append(str, fmt.Sprintf("%s   %g   %d  %.2f%%\n", r.Inst, x.Price, x.Volume/OneHand, getRa(x.Price, base)))
 		}
 	}
 	if b {
-		SendMsg("wm", smsg)
-		SendMsg("zbl", smsg)
+		n := len(v)
+		for name, _ := range mId2Listener[r.Inst] {
+			needlen := getFoller(name).Id[r.Inst]
+			smsg := muban
+			b = false
+			for i := 0; i < n; i++ {
+				if v[i] >= needlen {
+					smsg += str[i]
+					b = true
+				}
+			}
+			if b {
+				SendMsg(name, smsg)
+			}
+		}
 	}
 }
 func handleDyna(r dataRes) {
 	for _, x := range r.QuoteData.DynaData {
-		if _, ok := mName2Ratio[r.Inst]; ok {
+		if _, ok := mId2Ratio[r.Inst]; ok {
 			//fmt.Println(v)
 		} else {
-			mName2Ratio[r.Inst] = x.LastPrice
+			mId2Ratio[r.Inst] = x.LastPrice
 		}
 	}
 }
 func handleSTATISTICS(r dataRes) {
 	for _, x := range r.QuoteData.StatisticsData {
-		mName2BaseData[r.Inst] = x
+		mId2BaseData[r.Inst] = x
 	}
 }
 func handleStatic(r dataRes) {
 	for _, x := range r.QuoteData.StaticData {
-		mName2Info[r.Inst] = x
+		mId2ConstInfo[r.Inst] = x
 	}
 }
-func Post(dataJson Data_json) {
-	fmt.Println("post ", dataJson)
-	dataJson.ReqID = int(atomic.AddInt32(&reqid, 1))
-	cconn.WriteJSON(dataJson)
-}
+
 func handleRes(r dataRes) {
 
 	if r.ServiceType == "TICK" {
@@ -93,10 +182,11 @@ func handleRes(r dataRes) {
 
 }
 func InitWs() {
-	mName2Ratio = map[string]float64{}
-	mName2BaseData = map[string]StatisticType{}
-	mName2Info = map[string]StaticType{}
-
+	mId2Ratio = map[string]float64{}
+	mId2BaseData = map[string]StatisticType{}
+	mId2ConstInfo = map[string]StaticType{}
+	mId2Listener = map[string]map[string]empty{}
+	mNameFollor = map[string]*Follow{}
 }
 func Run() {
 
