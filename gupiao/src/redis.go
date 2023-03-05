@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
+	"time"
 )
 
 var cliRedis *redis.Client
@@ -13,9 +14,9 @@ const AllID = "allgpid"
 
 func InitRedis() {
 	cliRedis = redis.NewClient(&redis.Options{
-		Addr:     "1.1.68.173:1124",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     "218.78.68.173:1124",
+		Password: "042199", // no password set
+		DB:       0,        // use default DB
 	})
 	if nil != cliRedis.Ping().Err() {
 		panic("redis connect error")
@@ -52,6 +53,9 @@ func ClearFollowById(id string) {
 }
 
 func ReLoad() {
+
+	LoadAll()
+	time.Sleep(time.Second) //当前协程等1s  等loadall的信息返回
 	data, err := cliRedis.HGetAll(HKey).Result()
 	if err == nil {
 		for wechatid, userinfo := range data {
@@ -64,7 +68,6 @@ func ReLoad() {
 			}
 		}
 	}
-	LoadAll()
 }
 
 func LoadAll() {

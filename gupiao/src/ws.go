@@ -215,7 +215,9 @@ func handleTick(r dataRes) {
 
 	}
 	if bra {
-		SendMsg(r.Inst, ramsg)
+		for name, _ := range mId2Listener[r.Inst] {
+			SendMsg(name, ramsg)
+		}
 		ddMsg <- ramsg
 	}
 }
@@ -457,7 +459,7 @@ func RunWs() {
 	}
 	cconn = conn
 	go Ping(conn)
-	ReLoad()
+	go ReLoad()
 	DsMsg()
 
 	if err != nil {

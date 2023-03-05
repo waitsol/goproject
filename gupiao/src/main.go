@@ -26,9 +26,9 @@ func main() {
 
 	InitVal()
 	InitRedis()
-	go RunWechat()
+	//go RunWechat()
 	go RecvDDMsg()
-	<-StartWs
+	//<-StartWs
 	RunWs()
 	//s := "a  000  sz"
 	//fmt.Println(stringSplit(s, ' '))
