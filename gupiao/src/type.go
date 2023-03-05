@@ -161,8 +161,8 @@ type dataRes struct {
 		TickData []TickType `json:"TickData"`
 		//不知道干嘛的
 		InstStatusData []InstStatusType `json:"InstStatusData"`
-		//k线
-		KlineData []KlineType `json:"KlineData"`
+		//k线 不解析了
+		//KlineData []KlineType `json:"KlineData"`
 		//不动的数据 开盘价  昨天收盘价等等
 		StatisticsData []StatisticType `json:"StatisticsData"`
 		//早盘 数据
