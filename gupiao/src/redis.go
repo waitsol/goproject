@@ -13,8 +13,8 @@ const AllID = "allgpid"
 
 func InitRedis() {
 	cliRedis = redis.NewClient(&redis.Options{
-		Addr:     "1.1.68.173:1124",
-		Password: "", // no password set
+		Addr:     "218.78.68.173:1124",
+		Password: "042199ww", // no password set
 		DB:       0,  // use default DB
 	})
 	if nil != cliRedis.Ping().Err() {
