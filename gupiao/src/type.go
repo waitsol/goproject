@@ -55,7 +55,7 @@ type DynaType struct {
 	KindsUpdown    struct {
 		FiveMinsUpdown  float64 `json:"FiveMinsUpdown"`
 		ThreeMinsUpdown float64 `json:"ThreeMinsUpdown"`
-		OneMinsUpdown   int     `json:"OneMinsUpdown"`
+		OneMinsUpdown   float64 `json:"OneMinsUpdown"`
 		MinUpdown2      int     `json:"MinUpdown2"`
 		MinUpdown4      int     `json:"MinUpdown4"`
 	} `json:"KindsUpdown"`
