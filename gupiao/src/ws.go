@@ -148,7 +148,7 @@ func handleTick(r dataRes) {
 	bra := false
 	if info, ok := mId2ConstInfo[r.Inst]; ok {
 		muban = info.InstrumentName + "\n"
-		ramsg = fmt.Sprintf("%s  %s  5分钟左右交易量变大\n", r.Inst, info.InstrumentName)
+		ramsg = fmt.Sprintf("%s  %s  交易量变大\n", r.Inst, info.InstrumentName)
 	}
 	b := false
 	notify := false
@@ -182,8 +182,12 @@ func handleTick(r dataRes) {
 				base = sts.PreClosePrice
 			}
 			b = true
-			v = append(v, x.Volume)
-			str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", getRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
+			fmt.Println("???", x.Price, base, getRa(x.Price, base))
+			if getRa(x.Price, base) < 22 {
+				str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", getRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
+				v = append(v, x.Volume)
+
+			}
 		}
 	}
 	if b {
@@ -215,7 +219,9 @@ func handleTick(r dataRes) {
 
 	}
 	if bra {
-		SendMsg(r.Inst, ramsg)
+		for name, _ := range mId2Listener[r.Inst] {
+			SendMsg(name, ramsg)
+		}
 		ddMsg <- ramsg
 	}
 }
@@ -262,22 +268,24 @@ func checkUnActionByTime(id string, sec int, run bool) bool {
 		if sts, ok := mId2BaseData[id]; ok {
 			base := sts.PreClosePrice
 			ra := getRa(diff, base)
-			if math.Abs(ra) >= WarnRatio {
+			fmt.Println("...", hidx, low, diff, base)
+			if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
 				ch := "↑↑↑"
 				if ra < 0 {
 					ch = "↓↓↓"
 				}
-				SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\nmin = %.2f%% max =%.2f%% 波动 = %.2f%% \n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra))
-				return true
+				SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\n%.2f%%  %.2f%%  %.2f%% \n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra))
+				return false
 			}
 		}
 	}
-	return false
+	return true
 }
 func checkUnActionByCount(id string, cnt int, run bool) bool {
 	if run == false {
 		return false
 	}
+	tcnt := cnt
 	//算法 记录最高点和最低点 如果当前点不是最新的最高点和最低点就不上报
 	low := float64(60000)
 	lidx := -1
@@ -308,17 +316,18 @@ func checkUnActionByCount(id string, cnt int, run bool) bool {
 		if sts, ok := mId2BaseData[id]; ok {
 			base := sts.PreClosePrice
 			ra := getRa(diff, base)
-			if math.Abs(ra) >= WarnRatio {
+			fmt.Println("...", hidx, low, diff, base)
+			if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
 				ch := "↑↑↑"
 				if ra < 0 {
 					ch = "↓↓↓"
 				}
-				SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\nmin = %.2f%% max =%.2f%% 波动 = %.2f%% \n", muban, cnt, ch, getRa(low, base), getRa(hight, base), ra))
-				return true
+				SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%% \n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra))
+				return false
 			}
 		}
 	}
-	return false
+	return true
 }
 
 // 突破上限才比较
@@ -336,7 +345,7 @@ func checkUnActionMaxMin(r dataRes) {
 					ratio3 := getRa(x.Min, sts.PreClosePrice)
 					fmt.Println(ratio2/0.49, ratio1/0.49)
 					if (ratio1/0.49 != ratio2/0.49) && (ratio1-ratio3 > WarnHL) {
-						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新高↑↑↑\nmax = %.2f%% min = %.2f%%	", muban, ratio1, ratio3))
+						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新高↑↑↑\n%.2f%%  %.2f%%\n", muban, ratio1, ratio3))
 					}
 				}
 				x.Max = y.HighestPrice
@@ -348,7 +357,7 @@ func checkUnActionMaxMin(r dataRes) {
 					ratio3 := getRa(x.Max, sts.PreClosePrice)
 
 					if (ratio1/0.49 != ratio2/0.49) && (ratio3-ratio1 > WarnHL) {
-						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新低↓↓↓\nmax = %.2f%% min = %.2f%%", muban, ratio3, ratio1))
+						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新低↓↓↓\n%.2f%%  %.2f%%\n", muban, ratio3, ratio1))
 					}
 				}
 				x.Min = y.LowestPrice
@@ -356,7 +365,11 @@ func checkUnActionMaxMin(r dataRes) {
 		}
 	} else {
 		for _, x := range r.QuoteData.DynaData {
-			mId2HL[r.Inst] = &HL{Max: x.HighestPrice, Min: x.LowestPrice}
+			if x.LowestPrice > 0 {
+
+				mId2HL[r.Inst] = &HL{Max: x.HighestPrice, Min: x.LowestPrice}
+				fmt.Println("--- ", x.HighestPrice, x.LowestPrice)
+			}
 		}
 	}
 }
@@ -457,7 +470,7 @@ func RunWs() {
 	}
 	cconn = conn
 	go Ping(conn)
-	ReLoad()
+	go ReLoad()
 	DsMsg()
 
 	if err != nil {

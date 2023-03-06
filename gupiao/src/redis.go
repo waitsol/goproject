@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/go-redis/redis"
 )
 
@@ -15,7 +16,7 @@ func InitRedis() {
 	cliRedis = redis.NewClient(&redis.Options{
 		Addr:     "218.78.68.173:1124",
 		Password: "042199ww", // no password set
-		DB:       0,  // use default DB
+		DB:       0,          // use default DB
 	})
 	if nil != cliRedis.Ping().Err() {
 		panic("redis connect error")
@@ -52,6 +53,9 @@ func ClearFollowById(id string) {
 }
 
 func ReLoad() {
+
+	LoadAll()
+	//time.Sleep(10 * time.Second) //当前协程等1s  等loadall的信息返回
 	data, err := cliRedis.HGetAll(HKey).Result()
 	if err == nil {
 		for wechatid, userinfo := range data {
@@ -59,12 +63,15 @@ func ReLoad() {
 			if json.Unmarshal([]byte(userinfo), f) == nil {
 				mIdFollow[wechatid] = f
 				for fid, _ := range f.FollowsId {
-					Post(wechatid, fid)
+					//Post(wechatid, fid)
+					if _, ok := mId2Listener[fid]; !ok {
+						mId2Listener[fid] = map[string]empty{}
+					}
+					mId2Listener[fid][wechatid] = empty{}
 				}
 			}
 		}
 	}
-	LoadAll()
 }
 
 func LoadAll() {
