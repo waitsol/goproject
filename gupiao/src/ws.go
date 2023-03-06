@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
+	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -17,8 +18,9 @@ const (
 	WarnRatio = 1.8
 	LB        = 300
 )
+const wsc = 0
 
-var checkSecs = []int{3, 10, 30, 60, 120, 300}
+var checkSecs = []int64{3, 10, 30, 60, 120, 300}
 var checkCnts = []int{10, 20, 30, 50, 100}
 
 type empty struct {
@@ -50,76 +52,94 @@ var mId2Dyna map[string][]DynaType
 var mId2LB map[string]*VRa
 
 // 监听者
+var listerMx sync.Mutex
 var mId2Listener map[string]map[string]empty
-var cconn *websocket.Conn
+var mId2Post map[string]empty
+var mId2Time map[string]int64
+var mId2cnt map[string]int64
 
-func PostSTATISTICS(id string) {
+var wscon []*websocket.Conn
+
+func postJson(id int, data interface{}) {
+	wscon[id].WriteJSON(data)
+}
+func hx(id string) int {
+	x, _ := strconv.Atoi(id)
+	return x % (wsc + 1)
+}
+
+func PostSTATISTICS(id, dq string) {
 
 	dataJson := Data_json{
 		SubType:     "SUBON",
 		Inst:        id,
-		Market:      "sh",
+		Market:      dq,
 		ServiceType: "STATISTICS",
 		ReqID:       int(atomic.AddInt32(&reqid, 1)),
 	}
-	cconn.WriteJSON(dataJson)
-	dataJson.Market = "sz"
-	cconn.WriteJSON(dataJson)
+	postJson(hx(id), dataJson)
+
 }
-func PostTick(id string) {
+func PostTick(id, dq string) {
 	dataJson := Data_json{
 		SubType:     "SUBON",
 		Inst:        id,
-		Market:      "sh",
+		Market:      dq,
 		ServiceType: "TICK",
 		ReqID:       int(atomic.AddInt32(&reqid, 1)),
 	}
-	cconn.WriteJSON(dataJson)
-	dataJson.Market = "sz"
+	postJson(hx(id), dataJson)
 
-	cconn.WriteJSON(dataJson)
 }
-func PostStatic(id string) {
+func PostStatic(id, dq string) {
 
 	dataJson := Data_json{
 		SubType:     "SUBON",
 		Inst:        id,
-		Market:      "sh",
+		Market:      dq,
 		ServiceType: "STATIC",
 		ReqID:       int(atomic.AddInt32(&reqid, 1)),
 	}
-	cconn.WriteJSON(dataJson)
-	dataJson.Market = "sz"
-	cconn.WriteJSON(dataJson)
+	postJson(hx(id), dataJson)
+
 }
-func PostDyna(id string) {
+func PostDyna(id, dq string) {
 
 	dataJson := Data_json{
 		SubType:     "SUBON",
 		Inst:        id,
-		Market:      "sh",
+		Market:      dq,
 		ServiceType: "DYNA",
 		ReqID:       int(atomic.AddInt32(&reqid, 1)),
 	}
-	cconn.WriteJSON(dataJson)
-	dataJson.Market = "sz"
-	cconn.WriteJSON(dataJson)
+	postJson(hx(id), dataJson)
 
 }
 
-func Post(name, id string) {
+func Post(id, dq string) {
 	//当前没有post过
-	if _, ok := mId2ConstInfo[id]; !ok {
-		PostStatic(id)
-		PostSTATISTICS(id)
-		PostTick(id)
-		PostDyna(id)
+	if _, ok := mId2Post[id]; !ok {
+		PostStatic(id, dq)
+		PostSTATISTICS(id, dq)
+		PostTick(id, dq)
+		PostDyna(id, dq)
+		mId2Post[id] = empty{}
 	}
+	listerMx.Lock()
 	if _, ok := mId2Listener[id]; !ok {
 		mId2Listener[id] = map[string]empty{}
 	}
+	listerMx.Unlock()
+
+}
+func PostAndListen(name, id, dq string) {
+	//当前没有post过
+	Post(id, dq)
+	listerMx.Lock()
 
 	mId2Listener[id][name] = empty{}
+	listerMx.Unlock()
+
 }
 
 func getRa(cur, base float64) float64 {
@@ -165,8 +185,11 @@ func handleTick(r dataRes) {
 		tprice := x.Price * float64(x.Volume)
 
 		//fmt.Println(tprice / ra.GetAvg())
-		if tprice/ra.GetAvg() >= WarnRatio {
+		if mId2Time[r.Inst]+60 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
+			fmt.Println("log1 ", tprice/ra.GetAvg(), tprice, ra.GetAvg(), r.Inst)
+
 			bra = true
+			mId2Time[r.Inst] = x.Time
 		}
 		ra.Push(VRaInnner{val: tprice, t: x.Time})
 
@@ -182,16 +205,19 @@ func handleTick(r dataRes) {
 				base = sts.PreClosePrice
 			}
 			b = true
-			fmt.Println("???", x.Price, base, getRa(x.Price, base))
-			if getRa(x.Price, base) < 22 {
-				str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", getRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
-				v = append(v, x.Volume)
+			//fmt.Println("???", x.Price, base, getRa(x.Price, base))
+			//if getRa(x.Price, base) < 22 {
+			str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", getRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
+			v = append(v, x.Volume)
 
-			}
+			//}
 		}
 	}
+
 	if b {
 		n := len(v)
+
+		listerMx.Lock()
 		for name, _ := range mId2Listener[r.Inst] {
 			needlen := getFollow(name).FollowsId[r.Inst].WarnMsg
 			smsg := muban
@@ -206,6 +232,8 @@ func handleTick(r dataRes) {
 				SendMsg(name, smsg)
 			}
 		}
+
+		listerMx.Unlock()
 	}
 	if notify {
 		run := true
@@ -219,18 +247,26 @@ func handleTick(r dataRes) {
 
 	}
 	if bra {
+
+		listerMx.Lock()
 		for name, _ := range mId2Listener[r.Inst] {
 			SendMsg(name, ramsg)
 		}
+
+		listerMx.Unlock()
 		ddMsg <- ramsg
 	}
 }
 func SendMsg2Listen(inst, msg string) {
+
+	listerMx.Lock()
 	for name, _ := range mId2Listener[inst] {
 		SendMsg(name, msg)
 	}
+
+	listerMx.Unlock()
 }
-func checkUnActionByTime(id string, sec int, run bool) bool {
+func checkUnActionByTime(id string, sec int64, run bool) bool {
 	if run == false {
 		return false
 	}
@@ -268,21 +304,22 @@ func checkUnActionByTime(id string, sec int, run bool) bool {
 		if sts, ok := mId2BaseData[id]; ok {
 			base := sts.PreClosePrice
 			ra := getRa(diff, base)
-			fmt.Println("...", hidx, low, diff, base)
-			if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
-				ch := "↑↑↑"
-				if ra < 0 {
-					ch = "↓↓↓"
-				}
-				SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\n%.2f%%  %.2f%%  %.2f%% \n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra))
-				return false
+			//fmt.Println("...", hidx, low, diff, base)
+			//if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
+			ch := "↑↑↑"
+			if ra < 0 {
+				ch = "↓↓↓"
 			}
+			SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\n%.2f%%  %.2f%%  %.2f%% \n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra))
+			fmt.Printf("%s 在%d秒异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %d %d\n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra, id, low, hight)
+			return false
+			//}
 		}
 	}
 	return true
 }
 func checkUnActionByCount(id string, cnt int, run bool) bool {
-	if run == false {
+	if run == false || mId2cnt[id]+60 > time.Now().Unix() {
 		return false
 	}
 	tcnt := cnt
@@ -316,15 +353,17 @@ func checkUnActionByCount(id string, cnt int, run bool) bool {
 		if sts, ok := mId2BaseData[id]; ok {
 			base := sts.PreClosePrice
 			ra := getRa(diff, base)
-			fmt.Println("...", hidx, low, diff, base)
-			if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
-				ch := "↑↑↑"
-				if ra < 0 {
-					ch = "↓↓↓"
-				}
-				SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%% \n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra))
-				return false
+			//fmt.Println("...", hidx, low, diff, base)
+			//	if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
+			ch := "↑↑↑"
+			if ra < 0 {
+				ch = "↓↓↓"
 			}
+			mId2cnt[id] = time.Now().Unix()
+			SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%% \n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra))
+			fmt.Printf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %d %d\n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra, id, low, hight)
+			return false
+			//}
 		}
 	}
 	return true
@@ -346,6 +385,7 @@ func checkUnActionMaxMin(r dataRes) {
 					fmt.Println(ratio2/0.49, ratio1/0.49)
 					if (ratio1/0.49 != ratio2/0.49) && (ratio1-ratio3 > WarnHL) {
 						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新高↑↑↑\n%.2f%%  %.2f%%\n", muban, ratio1, ratio3))
+						fmt.Printf("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %d %d\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
 					}
 				}
 				x.Max = y.HighestPrice
@@ -358,6 +398,8 @@ func checkUnActionMaxMin(r dataRes) {
 
 					if (ratio1/0.49 != ratio2/0.49) && (ratio3-ratio1 > WarnHL) {
 						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新低↓↓↓\n%.2f%%  %.2f%%\n", muban, ratio3, ratio1))
+						fmt.Printf("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %d %d\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
+
 					}
 				}
 				x.Min = y.LowestPrice
@@ -368,7 +410,7 @@ func checkUnActionMaxMin(r dataRes) {
 			if x.LowestPrice > 0 {
 
 				mId2HL[r.Inst] = &HL{Max: x.HighestPrice, Min: x.LowestPrice}
-				fmt.Println("--- ", x.HighestPrice, x.LowestPrice)
+				//	fmt.Println("--- ", r.Inst, x.HighestPrice, x.LowestPrice)
 			}
 		}
 	}
@@ -433,6 +475,13 @@ func handleRes(r dataRes) {
 
 }
 func RunWs() {
+	wscon = make([]*websocket.Conn, wsc+1)
+	for i := 0; i < wsc; i++ {
+		go startws(i)
+	}
+	startws(wsc)
+}
+func startws(i int) {
 
 	header := http.Header{
 		"Accept-Language": []string{"zh-CN,zh;q=0.9"},
@@ -468,13 +517,14 @@ func RunWs() {
 	if err != nil {
 		fmt.Println("json marshal error:", err)
 	}
-	cconn = conn
 	go Ping(conn)
-	go ReLoad()
-	DsMsg()
-
+	wscon[i] = conn
 	if err != nil {
 		fmt.Println("json marshal error:", err)
+	}
+	if i == wsc {
+		go ReLoad()
+		DsMsg()
 	}
 	for {
 		_, b, err := conn.ReadMessage()

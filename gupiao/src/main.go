@@ -20,6 +20,9 @@ func InitVal() {
 	StartWs = make(chan struct{}, 1)
 	client = &http.Client{Timeout: 5 * time.Second}
 	ddMsg = make(chan string, 100)
+	mId2Post = map[string]empty{}
+	mId2cnt = map[string]int64{}
+	mId2Time = map[string]int64{}
 }
 
 func main() {
@@ -29,6 +32,7 @@ func main() {
 	go RunWechat()
 	go RecvDDMsg()
 	<-StartWs
+
 	RunWs()
 	//s := "a  000  sz"
 	//fmt.Println(stringSplit(s, ' '))

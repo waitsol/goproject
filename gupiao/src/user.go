@@ -24,7 +24,7 @@ func (this *Follow) follow(id string) {
 		this.FollowsId[id].Ok = false
 	} else {
 		if _, ok := this.FollowsId[id]; !ok {
-			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 400}
+			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 200}
 		}
 		this.FollowsId[id].Ok = true
 

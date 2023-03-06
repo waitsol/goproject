@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/go-redis/redis"
 )
 
@@ -45,17 +44,19 @@ func GetUserFollow(id string) *Follow {
 		return x
 	}
 	x.Id = id
+
 	x.FollowsId = map[string]*FollowSt{}
 	return x
 }
 func ClearFollowById(id string) {
 	cliRedis.HDel(HKey, id)
+	delete(mId2Listener[id], id)
+	GetUserFollow(id).FollowsId = map[string]*FollowSt{}
 }
 
 func ReLoad() {
 
 	LoadAll()
-	//time.Sleep(10 * time.Second) //当前协程等1s  等loadall的信息返回
 	data, err := cliRedis.HGetAll(HKey).Result()
 	if err == nil {
 		for wechatid, userinfo := range data {
@@ -63,25 +64,26 @@ func ReLoad() {
 			if json.Unmarshal([]byte(userinfo), f) == nil {
 				mIdFollow[wechatid] = f
 				for fid, _ := range f.FollowsId {
-					//Post(wechatid, fid)
-					if _, ok := mId2Listener[fid]; !ok {
-						mId2Listener[fid] = map[string]empty{}
-					}
-					mId2Listener[fid][wechatid] = empty{}
+					PostFromRedis(wechatid, fid)
 				}
 			}
 		}
 	}
 }
-
+func PostFromRedis(uid, gid string) {
+	dq, err := cliRedis.HGet(AllID, gid).Result()
+	if err == nil {
+		PostAndListen(uid, gid, dq)
+	}
+}
 func LoadAll() {
 	data, err := cliRedis.HGetAll(AllID).Result()
 	if err == nil {
-		for gpid, _ := range data {
-			PostStatic(gpid)
-			PostSTATISTICS(gpid)
-			PostTick(gpid)
-			PostDyna(gpid)
+		for gpid, dq := range data {
+			//if gpid != "000151" {
+			//	continue
+			//}
+			Post(gpid, dq)
 		}
 	}
 

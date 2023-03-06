@@ -68,7 +68,7 @@ type DynaType struct {
 type TickType struct {
 	TradingDay int     `json:"TradingDay"`
 	ID         int     `json:"ID"`
-	Time       int     `json:"Time"`
+	Time       int64   `json:"Time"`
 	Price      float64 `json:"Price"`
 	Volume     int     `json:"Volume"`
 	Property   int     `json:"Property"`
@@ -184,7 +184,7 @@ type MsgType struct {
 }
 
 type VRaInnner struct {
-	t   int
+	t   int64
 	val float64
 }
 type VRa struct {
