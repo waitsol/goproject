@@ -311,7 +311,7 @@ func checkUnActionByTime(id string, sec int64, run bool) bool {
 				ch = "↓↓↓"
 			}
 			SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\n%.2f%%  %.2f%%  %.2f%% \n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra))
-			fmt.Printf("%s 在%d秒异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %d %d\n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra, id, low, hight)
+			fmt.Printf("%s 在%d秒异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %.2f %.2f\n", muban, sec, ch, getRa(low, base), getRa(hight, base), ra, id, low, hight)
 			return false
 			//}
 		}
@@ -345,23 +345,25 @@ func checkUnActionByCount(id string, cnt int, run bool) bool {
 		}
 	}
 	if (lidx == n-1 || hidx == n-1) && lidx != hidx {
-		diff := hight - low
+
 		muban := ""
 		if info, ok := mId2ConstInfo[id]; ok {
 			muban = info.InstrumentName
 		}
 		if sts, ok := mId2BaseData[id]; ok {
 			base := sts.PreClosePrice
-			ra := getRa(diff, base)
+			ra1 := getRa(hight, base)
+			ra2 := getRa(low, base)
+			diff := ra1 - ra2
 			//fmt.Println("...", hidx, low, diff, base)
 			//	if math.Abs(ra) >= WarnRatio && math.Abs(ra) < 20 {
 			ch := "↑↑↑"
-			if ra < 0 {
+			if lidx == n-1 {
 				ch = "↓↓↓"
 			}
 			mId2cnt[id] = time.Now().Unix()
-			SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%% \n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra))
-			fmt.Printf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %d %d\n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), ra, id, low, hight)
+			SendMsg2Listen(id, fmt.Sprintf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%% \n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), diff))
+			fmt.Printf("%s 在%d次交易中异动 %s\n%.2f%%  %.2f%%  %.2f%%  %s %.2f %.2f\n", muban, tcnt, ch, getRa(low, base), getRa(hight, base), diff, id, low, hight)
 			return false
 			//}
 		}
@@ -385,12 +387,12 @@ func checkUnActionMaxMin(r dataRes) {
 					fmt.Println(ratio2/0.49, ratio1/0.49)
 					if (ratio1/0.49 != ratio2/0.49) && (ratio1-ratio3 > WarnHL) {
 						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新高↑↑↑\n%.2f%%  %.2f%%\n", muban, ratio1, ratio3))
-						fmt.Printf("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %d %d\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
+						fmt.Printf("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %.2f %.2f\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
 					}
 				}
 				x.Max = y.HighestPrice
 			}
-			if y.LowestPrice < x.Min {
+			if y.LowestPrice != 0 && y.LowestPrice < x.Min {
 				if sts, ok := mId2BaseData[r.Inst]; ok {
 					ratio1 := getRa(y.LowestPrice, sts.PreClosePrice)
 					ratio2 := getRa(x.Min, sts.PreClosePrice)
@@ -398,7 +400,7 @@ func checkUnActionMaxMin(r dataRes) {
 
 					if (ratio1/0.49 != ratio2/0.49) && (ratio3-ratio1 > WarnHL) {
 						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新低↓↓↓\n%.2f%%  %.2f%%\n", muban, ratio3, ratio1))
-						fmt.Printf("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %d %d\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
+						fmt.Printf("%s 新低\n%.2f%%  %.2f%% inst = %s %.2f %.2f\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
 
 					}
 				}
@@ -543,7 +545,7 @@ func startws(i int) {
 		if err != nil {
 			fmt.Println("json.Unmarshal error ", err)
 		} else {
-			//fmt.Printf("ws: %+v\n", r)
+			//fmt.Println("ws")
 			handleRes(r)
 		}
 	}
