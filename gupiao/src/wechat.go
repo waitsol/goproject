@@ -39,7 +39,7 @@ func SendMsg(id, msg string) {
 	MsgChan <- MsgType{id, msg}
 }
 func RecvMsg() {
-	tick := time.NewTicker(1 * time.Second)
+	tick := time.NewTicker(10 * time.Second)
 	cache := map[string]string{}
 	for {
 		select {

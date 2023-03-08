@@ -28,7 +28,7 @@ func (this *Follow) follow(id string) {
 		}
 		this.FollowsId[id].Ok = true
 
-		Post(this.Id, id)
+		PostFromRedis(this.Id, id)
 	}
 
 	SaveUserFollow(this.Id, *this)

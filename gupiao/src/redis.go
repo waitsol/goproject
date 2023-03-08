@@ -56,7 +56,7 @@ func ClearFollowById(id string) {
 
 func ReLoad() {
 
-	LoadAll()
+	//LoadAll()
 	data, err := cliRedis.HGetAll(HKey).Result()
 	if err == nil {
 		for wechatid, userinfo := range data {
