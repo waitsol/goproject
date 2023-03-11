@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/eatmoreapple/openwechat"
-	"github.com/skip2/go-qrcode"
 	"runtime"
 	"time"
+
+	"github.com/eatmoreapple/openwechat"
+	"github.com/skip2/go-qrcode"
 )
 
 var Mgr map[string]*openwechat.Friend
@@ -15,7 +16,7 @@ var MsgChan chan MsgType
 func messageHandler(msg *openwechat.Message) {
 	sender, err := msg.Sender()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("msg error", err)
 		return
 	}
 	if msg.IsText() && sender.IsFriend() {

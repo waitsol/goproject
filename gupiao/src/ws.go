@@ -15,7 +15,7 @@ import (
 const (
 	OneHand   = 100
 	WarnHL    = 1
-	WarnRatio = 1.8
+	WarnRatio = 200
 	LB        = 300
 )
 const wsc = 0
@@ -185,7 +185,7 @@ func handleTick(r dataRes) {
 		tprice := x.Price * float64(x.Volume)
 
 		//fmt.Println(tprice / ra.GetAvg())
-		if mId2Time[r.Inst]+60 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
+		if mId2Time[r.Inst]+6 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
 			fmt.Println("log1 ", tprice/ra.GetAvg(), tprice, ra.GetAvg(), r.Inst)
 
 			bra = true
@@ -434,7 +434,10 @@ func checkVra(id string, mul float64, run bool) bool {
 }
 func GetList(id string) string {
 	msg := "list:\n"
-	for f, _ := range getFollow(id).FollowsId {
+	for f, val := range getFollow(id).FollowsId {
+		if val.Ok == false {
+			continue
+		}
 		idx := len(mId2Tick[f]) - 1
 		if idx < 0 {
 			continue

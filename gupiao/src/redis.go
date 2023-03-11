@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/go-redis/redis"
 )
 
@@ -40,18 +41,22 @@ func SaveUserFollow(name string, follow Follow) {
 func GetUserFollow(id string) *Follow {
 	data, err := cliRedis.HGet(HKey, id).Result()
 	x := &Follow{}
+
+	x.FollowsId = map[string]*FollowSt{}
 	if err == nil && json.Unmarshal([]byte(data), x) != nil {
 		return x
 	}
 	x.Id = id
 
-	x.FollowsId = map[string]*FollowSt{}
 	return x
 }
 func ClearFollowById(id string) {
 	cliRedis.HDel(HKey, id)
-	delete(mId2Listener[id], id)
-	GetUserFollow(id).FollowsId = map[string]*FollowSt{}
+	tmp := getFollow(id)
+	for gid, _ := range tmp.FollowsId {
+		delete(mId2Listener[id], gid)
+	}
+	tmp.FollowsId = map[string]*FollowSt{}
 }
 
 func ReLoad() {

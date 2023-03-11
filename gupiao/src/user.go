@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -36,6 +37,7 @@ func (this *Follow) follow(id string) {
 
 func (this *Follow) HandleMessage(msg string) (bool, string) {
 	v := stringSplit(msg, ' ')
+	fmt.Println("dbg:", v)
 	if len(v) == 0 {
 		return false, ""
 	}
@@ -57,9 +59,10 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			return true, "err args"
 		}
 	} else if v[0] == "list" {
-		_sendMsg(this.Id, GetList(this.Id))
+		return true, GetList(this.Id)
 	} else if v[0] == "clear" {
 		ClearFollowById(this.Id)
+		return true, "ok"
 	}
 	return false, ""
 }
