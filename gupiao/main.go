@@ -25,7 +25,7 @@ func loginit() {
 
 	// 创建日志轮转器
 	rotator, err := rotatelogs.New(
-		logfile+"%Y%m%d%H%M%S.log",                       // 日志文件名加时间
+		logfile+"%Y%m%d_%H.log",                          // 日志文件名加时间
 		rotatelogs.WithLinkName(linkName),                // 始终指向最新的日志文件
 		rotatelogs.WithRotationTime(time.Second*60*60*2), //2小时
 		rotatelogs.WithMaxAge(time.Second*60*60*24*3),    //3天
@@ -40,8 +40,6 @@ func loginit() {
 	// 打印日志
 	log.Info("This is a log message.")
 }
-
-var c chan bool
 
 func main() {
 	loginit()
