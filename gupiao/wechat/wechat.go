@@ -6,7 +6,6 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/waitsol/golib"
 	. "main/ipc"
-	"runtime"
 	"time"
 )
 
@@ -72,11 +71,8 @@ func RunWechat(ch chan struct{}) {
 	// 注册消息处理函数
 	bot.MessageHandler = messageHandler
 	// 可以设置通过该uuid获取到登录的二维码
-	if runtime.GOOS == "linux" {
-		bot.UUIDCallback = ConsoleQrCode
-	} else if runtime.GOOS == "windows" {
-		bot.UUIDCallback = openwechat.PrintlnQrcodeUrl
-	}
+
+	bot.UUIDCallback = openwechat.PrintlnQrcodeUrl
 	// 登录
 	reloadStorage := openwechat.NewFileHotReloadStorage("../storage.json")
 	defer reloadStorage.Close()
