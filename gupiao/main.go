@@ -3,7 +3,11 @@ package main
 import (
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	log "github.com/sirupsen/logrus"
+	"github.com/waitsol/golib"
+	"main/dingding"
 	_ "main/redis"
+	"main/wechat"
+	"main/ws"
 	"time"
 )
 
@@ -41,15 +45,15 @@ var c chan bool
 
 func main() {
 	loginit()
-	//InitVal()
-	//golib.Go(func() {
-	//	wechat.RunWechat(StartWs)
-	//})
-	//
-	//<-StartWs
-	//golib.Go(dingding.RecvDDMsg)
-	//
-	//golib.Go(ws.RunWs)
-	//golib.Wait()
+	InitVal()
+	golib.Go(func() {
+		wechat.RunWechat(StartWs)
+	})
+
+	<-StartWs
+	golib.Go(dingding.RecvDDMsg)
+
+	golib.Go(ws.RunWs)
+	golib.Wait()
 	log.Info("main exit")
 }
