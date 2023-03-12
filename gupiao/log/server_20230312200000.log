@@ -1,0 +1,4 @@
+time="2023-03-12T21:07:54+08:00" level=info msg="This is a log message."
+time="2023-03-12T21:07:54+08:00" level=info msg="main exit"
+time="2023-03-12T21:12:04+08:00" level=info msg="This is a log message."
+time="2023-03-12T21:12:04+08:00" level=info msg="main exit"
