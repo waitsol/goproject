@@ -33,7 +33,10 @@ func loginit() {
 	if err != nil {
 		log.Fatal("Failed to create rotator: ", err)
 	}
-
+	log.SetReportCaller(true)
+	log.SetFormatter(&log.JSONFormatter{
+		TimestampFormat: "15:04:05",
+	})
 	// 设置日志输出到文件
 	log.SetOutput(rotator)
 

@@ -185,7 +185,7 @@ func (this *WsSet) checkUnActionByTime(id string, sec int64, run bool) bool {
 					"inst": id, "low": low, "hight": hight, "base": base,
 				}).Infof("%s 在%d秒异动 %s", muban, sec, ch)
 				return false
-			} else {
+			} else if diff < 0 || diff > 20 {
 				log.WithFields(
 					log.Fields{
 						"inst":  id,
@@ -251,7 +251,7 @@ func (this *WsSet) checkUnActionByCount(id string, cnt int, run bool) bool {
 					"inst": id, "low": low, "hight": hight, "base": base,
 				}).Infof("%s 在%d次交易中异动 %s", muban, tcnt, ch)
 				return false
-			} else {
+			} else if diff < 0 || diff > 20 {
 				log.WithFields(
 					log.Fields{
 						"inst":  id,
