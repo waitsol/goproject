@@ -2,11 +2,12 @@ package wechat
 
 import (
 	"fmt"
+	. "main/ipc"
+	"time"
+
 	"github.com/eatmoreapple/openwechat"
 	"github.com/skip2/go-qrcode"
 	"github.com/waitsol/golib"
-	. "main/ipc"
-	"time"
 )
 
 var Mgr map[string]*openwechat.Friend
@@ -74,7 +75,7 @@ func RunWechat(ch chan struct{}) {
 
 	bot.UUIDCallback = openwechat.PrintlnQrcodeUrl
 	// 登录
-	reloadStorage := openwechat.NewFileHotReloadStorage("../storage.json")
+	reloadStorage := openwechat.NewFileHotReloadStorage("storage.json")
 	defer reloadStorage.Close()
 	err := bot.PushLogin(reloadStorage, openwechat.NewRetryLoginOption())
 	if err != nil {

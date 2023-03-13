@@ -9,6 +9,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+	github.com/waitsol/golib v0.0.0-20230312092854-0f2229de758e
 )
 
 require (
@@ -17,6 +18,5 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.27.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/waitsol/golib v0.0.0-20230312091514-d24e43e5a3e0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 )

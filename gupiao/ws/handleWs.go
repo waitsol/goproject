@@ -2,10 +2,11 @@ package ws
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"main/dingding"
 	"runtime/debug"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // 股票异动
@@ -60,6 +61,8 @@ func (this *WsSet) handleTick(r dataRes) {
 			base := x.Price
 			if sts, ok := this.mId2BaseData[r.Inst]; ok {
 				base = sts.PreClosePrice
+			} else {
+				log.New().WithField("inst", r.Inst).Error("base empty")
 			}
 			bflag = true
 			if GetRa(x.Price, base) < 22 {
@@ -366,16 +369,15 @@ func (this *WsSet) handleStatic(r dataRes) {
 }
 
 func (this *WsSet) handleRes(r dataRes) {
-	if this.start {
-		if r.ServiceType == "TICK" {
-			this.handleTick(r)
-		} else if r.ServiceType == "DYNA" {
-			this.handleDyna(r)
-		} else if r.ServiceType == "STATISTICS" {
-			this.handleSTATISTICS(r)
-		} else if r.ServiceType == "STATIC" {
-			this.handleStatic(r)
-		}
 
+	if this.start && r.ServiceType == "TICK" {
+		this.handleTick(r)
+	} else if this.start && r.ServiceType == "DYNA" {
+		this.handleDyna(r)
+	} else if r.ServiceType == "STATISTICS" {
+		this.handleSTATISTICS(r)
+	} else if r.ServiceType == "STATIC" {
+		this.handleStatic(r)
 	}
+
 }
