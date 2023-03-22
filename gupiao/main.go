@@ -45,16 +45,14 @@ func loginit() {
 }
 
 func main() {
-	loginit()
-	InitVal()
-	golib.Go(func() {
-		wechat.RunWechat(StartWs)
-	})
 
-	<-StartWs
+	//loginit()
+	InitVal()
 	golib.Go(dingding.RecvDDMsg)
+	wechat.Run()
 
 	golib.Go(ws.RunWs)
+
 	golib.Wait()
 	log.Info("main exit")
 }

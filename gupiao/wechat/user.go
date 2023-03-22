@@ -55,7 +55,7 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			debug.PrintStack()
 		}
 	}()
-	v := stringSplit(msg, ' ')
+	v := stringSplit(msg, '_')
 	if len(v) == 0 {
 		return false, ""
 	}

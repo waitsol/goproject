@@ -129,8 +129,8 @@ func updtatodd(x bool) {
 			}
 		}
 	}
-	dingding.SendDingTalkMessage(msgzt, dingding.KeywordMonitor)
-	dingding.SendDingTalkMessage(msg, dingding.KeywordMonitor)
+	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "0", Msg: msgzt}, dingding.KeywordMonitor)
+	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "0", Msg: msg}, dingding.KeywordMonitor)
 	if x {
 		for _, k := range MGR {
 			k.Stop()
@@ -145,6 +145,13 @@ func startListen() {
 		x.Reset()
 	}
 	time.AfterFunc(86400*time.Second, startListen)
+}
+func daka(msg string) {
+	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "0", Msg: msg}, dingding.KeywordMonitor)
+
+	time.AfterFunc(86400*time.Second, func() {
+		daka(msg)
+	})
 }
 
 // 定时
@@ -161,7 +168,7 @@ func DsMsg() {
 	}
 	{
 		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:31", time.Local)
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 15:31", time.Local)
 		diff := time.Now().Sub(end)
 
 		diff %= 86400 * time.Second
@@ -179,5 +186,29 @@ func DsMsg() {
 
 		time.AfterFunc(diff, startListen)
 
+	}
+	{
+		timeFormat := "2006-01-02 15:04"
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 09:28", time.Local)
+		diff := time.Now().Sub(end)
+
+		diff %= 86400 * time.Second
+		diff = 86400*time.Second - diff
+
+		time.AfterFunc(diff, func() {
+			daka("主人上班别忘记打卡")
+		})
+	}
+	{
+		timeFormat := "2006-01-02 15:04"
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:30", time.Local)
+		diff := time.Now().Sub(end)
+
+		diff %= 86400 * time.Second
+		diff = 86400*time.Second - diff
+
+		time.AfterFunc(diff, func() {
+			daka("主人下班别忘记打卡")
+		})
 	}
 }

@@ -100,7 +100,8 @@ func RunWechat(ch chan struct{}) {
 		Mgr[f.ID()] = f
 	}
 	golib.Go(RecvMsg)
-	ch <- struct{}{}
 	loadFollow()
+	ch <- struct{}{}
+
 	bot.Block()
 }

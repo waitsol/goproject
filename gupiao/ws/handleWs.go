@@ -2,7 +2,6 @@ package ws
 
 import (
 	"fmt"
-	"main/dingding"
 	"runtime/debug"
 	"time"
 
@@ -15,11 +14,11 @@ func (this *WsSet) handleTick(r dataRes) {
 	v := []int{}
 	str := []string{}
 
-	ramsg := ""
-	bra := false
+	//ramsg := ""
+	//bra := false
 	if info, ok := this.mId2ConstInfo[r.Inst]; ok {
 		muban = info.InstrumentName + "\n"
-		ramsg = fmt.Sprintf("%s  %s  交易量变大\n", r.Inst, info.InstrumentName)
+		//ramsg = fmt.Sprintf("%s  %s  交易量变大\n", r.Inst, info.InstrumentName)
 	}
 	//标志位 数据是否达到最低发送 波动值
 	bflag := false
@@ -46,7 +45,7 @@ func (this *WsSet) handleTick(r dataRes) {
 				"ra.GetAvg()":        ra.GetAvg(),
 				" r.Inst":            r.Inst,
 			}).Info("tick波动 ")
-			bra = true
+			//	bra = true
 			this.mId2Time[r.Inst] = x.Time
 		}
 		ra.Push(VRaInnner{val: tprice, t: x.Time})
@@ -111,17 +110,17 @@ func (this *WsSet) handleTick(r dataRes) {
 
 	}
 	//
-	if bra {
-		load, ok := SyncId2Listener.Load(r.Inst)
-		if ok {
-			listens := load.(map[string]int)
-			for name, _ := range listens {
-				SendMsg(name, ramsg)
-			}
-			fmt.Println(bra)
-			dingding.DdMsg <- ramsg
-		}
-	}
+	//if bra {
+	//	load, ok := SyncId2Listener.Load(r.Inst)
+	//	if ok {
+	//		listens := load.(map[string]int)
+	//		for name, _ := range listens {
+	//			SendMsg(name, ramsg)
+	//		}
+	//		fmt.Println(bra)
+	//		//dingding.DdMsg <- ramsg
+	//	}
+	//}
 }
 func SendMsg2Listen(inst, msg string) {
 

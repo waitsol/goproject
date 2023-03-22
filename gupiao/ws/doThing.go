@@ -1,6 +1,8 @@
 package ws
 
-import . "main/ipc"
+import (
+	"main/dingding"
+)
 
 func DelFollow(gid, uid string) {
 
@@ -19,5 +21,6 @@ func AddFollow(gid, uid string, val int) {
 	}
 }
 func SendMsg(id, msg string) {
-	MsgChan <- MsgType{id, msg}
+	//MsgChan <- MsgType{id, msg}
+	dingding.DdMsg <- dingding.DDMsgType{Id: id, Msg: msg}
 }
