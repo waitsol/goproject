@@ -111,17 +111,17 @@ func (this *WsSet) handleTick(r dataRes) {
 
 	}
 	//
-	//	if bra {
-	load, ok := SyncId2Listener.Load(r.Inst)
-	if ok {
-		listens := load.(map[string]int)
-		for name, _ := range listens {
-			SendMsg(name, ramsg)
+	if bra {
+		load, ok := SyncId2Listener.Load(r.Inst)
+		if ok {
+			listens := load.(map[string]int)
+			for name, _ := range listens {
+				SendMsg(name, ramsg)
+			}
+			fmt.Println(bra)
+			dingding.DdMsg <- ramsg
 		}
-		fmt.Println(bra)
-		dingding.DdMsg <- ramsg
 	}
-	//	}
 }
 func SendMsg2Listen(inst, msg string) {
 
@@ -328,24 +328,24 @@ func GetList(ids []string) string {
 
 	msg := "list:"
 
-	for i := 0; i < WSC; i++ {
-		for _, f := range ids {
-			idx := hx(f)
-			if idx < 0 {
-				continue
-			}
-			if sts, ok := MGR[i].mId2BaseData[f]; ok {
-
-				tick := MGR[i].mId2Tick[f][idx]
+	for _, f := range ids {
+		idx := hx(f)
+		if idx < 0 {
+			continue
+		}
+		if sts, ok := MGR[idx].mId2BaseData[f]; ok {
+			l := len(MGR[idx].mId2Tick[f])
+			if l > 0 {
+				tick := MGR[idx].mId2Tick[f][l-1]
 				ratio := GetRa(tick.Price, sts.PreClosePrice)
 				name := sts.InstrumentID
-				if info, ok := MGR[i].mId2ConstInfo[f]; ok {
+				if info, ok := MGR[idx].mId2ConstInfo[f]; ok {
 					name = info.InstrumentName
 				}
 				msg += fmt.Sprintf("\n%-10s  %.2f%%", name, ratio)
 			}
-		}
 
+		}
 	}
 
 	return msg
@@ -379,5 +379,4 @@ func (this *WsSet) handleRes(r dataRes) {
 	} else if r.ServiceType == "STATIC" {
 		this.handleStatic(r)
 	}
-
 }

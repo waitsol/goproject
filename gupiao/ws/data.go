@@ -39,6 +39,17 @@ func (this *WsSet) Init() {
 	this.start = true
 
 }
+
+func (this *WsSet) Reset() {
+	this.mId2Dyna = map[string][]DynaType{}
+	this.mId2HL = map[string]*HL{}
+	this.mId2Tick = map[string][]TickType{}
+	this.mId2LB = map[string]*VRa{}
+	this.mId2cnt = map[string]int64{}
+	this.mId2Time = map[string]int64{}
+	this.start = true
+
+}
 func (this *WsSet) Stop() {
 
 	this.start = false

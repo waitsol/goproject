@@ -93,7 +93,7 @@ func PostById(roleid, gid string, w int) {
 func GetMgr(id string) *WsSet {
 	return MGR[hx(id)]
 }
-func updtatodd() {
+func updtatodd(x bool) {
 	msg := ""
 	msgzt := ""
 	for i := 0; i < WSC; i++ {
@@ -131,11 +131,18 @@ func updtatodd() {
 	}
 	dingding.SendDingTalkMessage(msgzt, dingding.KeywordMonitor)
 	dingding.SendDingTalkMessage(msg, dingding.KeywordMonitor)
-	time.AfterFunc(86400*time.Second, updtatodd)
+	if x {
+		for _, k := range MGR {
+			k.Stop()
+		}
+	}
+	time.AfterFunc(86400*time.Second, func() {
+		updtatodd(x)
+	})
 }
 func startListen() {
 	for _, x := range MGR {
-		x.Init()
+		x.Reset()
 	}
 	time.AfterFunc(86400*time.Second, startListen)
 }
@@ -150,7 +157,7 @@ func DsMsg() {
 		diff %= 86400 * time.Second
 		diff = 86400*time.Second - diff
 
-		time.AfterFunc(diff, updtatodd)
+		time.AfterFunc(diff, func() { updtatodd(false) })
 	}
 	{
 		timeFormat := "2006-01-02 15:04"
@@ -159,11 +166,8 @@ func DsMsg() {
 
 		diff %= 86400 * time.Second
 		diff = 86400*time.Second - diff
+		time.AfterFunc(diff, func() { updtatodd(true) })
 
-		time.AfterFunc(diff, updtatodd)
-		for _, x := range MGR {
-			x.Stop()
-		}
 	}
 	{
 		timeFormat := "2006-01-02 15:04"
