@@ -46,7 +46,7 @@ func loginit() {
 
 func main() {
 
-	//loginit()
+	loginit()
 	InitVal()
 	golib.Go(dingding.RecvDDMsg)
 	wechat.Run()

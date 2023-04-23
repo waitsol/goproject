@@ -28,6 +28,6 @@ func Run() {
 	v1 := router.Group("/v1")
 	v1.GET("handle", handle)
 	golib.Go(func() {
-		router.Run()
+		router.Run("0.0.0.0:9876")
 	})
 }

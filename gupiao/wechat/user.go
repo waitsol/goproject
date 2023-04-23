@@ -2,11 +2,12 @@ package wechat
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"main/redis"
 	"main/ws"
 	"runtime/debug"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // 每个人关注那些 key roleid
@@ -71,12 +72,14 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 				this.FollowsId[v[1]] = &FollowSt{Ok: false}
 			}
 			this.FollowsId[v[1]].WarnMsg = x * ws.OneHand
+			SaveUserFollow(*this)
+			ws.AddFollow(v[1], this.Id, this.FollowsId[v[1]].WarnMsg)
 			return true, "ok"
 		} else {
 			return true, "err args"
 		}
 	} else if v[0] == "list" {
-		this.getList()
+		return true, this.getList()
 	} else if v[0] == "clear" {
 		this.clearUserFollow(this.Id)
 		return true, "ok"
@@ -124,14 +127,14 @@ func (this *Follow) clearUserFollow(uid string) {
 	}
 	SaveUserFollow(*this)
 }
-func (this *Follow) getList() {
+func (this *Follow) getList() string {
 	v := []string{}
 	for id, x := range this.FollowsId {
 		if x.Ok {
 			v = append(v, id)
 		}
 	}
-	_sendMsg(this.Id, ws.GetList(v))
+	return ws.GetList(v)
 }
 
 // 处理关注列表
