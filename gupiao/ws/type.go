@@ -203,31 +203,28 @@ type VRaInnner struct {
 }
 type VRa struct {
 	q   []VRaInnner
-	n   int
 	sum float64
 }
 
 // 处理消息的程序是 单协程
 func (this *VRa) Push(r VRaInnner) {
 	this.q = append(this.q, r)
-	this.n += 1
 	this.sum += r.val
 	i := 0
-	tn := this.n
-	for ; i < tn; i++ {
+	n := len(this.q)
+	for ; i < n; i++ {
 		if r.t-this.q[i].t > LB {
-			this.n //
 			this.sum -= this.q[i].val
 		} else {
 			break
 		}
 	}
-	this.q = this.q[i:tn]
+	this.q = this.q[i:n]
 }
 
 func (this *VRa) GetAvg() float64 {
-	if this.n == 0 {
+	if len(this.q) == 0 {
 		return 100000000
 	}
-	return this.sum / float64(this.n)
+	return this.sum / float64(len(this.q))
 }

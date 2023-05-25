@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis"
 	log "github.com/sirupsen/logrus"
 	"main/dingding"
@@ -78,4 +79,15 @@ func GetDQ(gid string) string {
 		return dq
 	}
 	return "sh"
+}
+func SaveTurnoverRate(gid string, ra float64) {
+	cliRedis.RPush(fmt.Sprintf("TurnoverRate.%v", gid), ra)
+	if cliRedis.LLen(fmt.Sprintf("TurnoverRate.%v", gid)).Val() > 180 {
+		cliRedis.LPop(fmt.Sprintf("TurnoverRate.%v", gid))
+	}
+	return
+}
+func LoadTurnoverRate(gid string) []string {
+	x, _ := cliRedis.LRange(fmt.Sprintf("TurnoverRate.%v", gid), 0, -1).Result()
+	return x
 }

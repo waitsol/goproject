@@ -7,6 +7,8 @@ type HL struct {
 	Max float64
 }
 
+var mId2TurnoverRate = map[string][]float64{}
+
 // 每个ws一个 ws收发单协程 协程安全
 type WsSet struct {
 	start bool

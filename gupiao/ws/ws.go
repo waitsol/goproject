@@ -50,6 +50,15 @@ func GetRa(cur, base float64) float64 {
 }
 
 func RunWs() {
+	x, _ := redis.LoadAll()
+	for k, _ := range x {
+		data := redis.LoadTurnoverRate(k)
+		for _, ra := range data {
+			f, _ := strconv.ParseFloat(ra, 64)
+			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], f)
+		}
+	}
+	return
 	MGR = make([]*WsSet, WSC)
 
 	for i := 0; i < WSC; i++ {
@@ -112,6 +121,10 @@ func startws(i int) {
 	}
 	MGR[i].Init()
 	MGR[i].conn = conn
+	if time.Now().Hour() >= 14 {
+		MGR[i].Stop()
+	}
+
 	stopc := make(chan bool)
 	golib.Go(func() {
 		MGR[i].Ping(stopc)

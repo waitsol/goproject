@@ -93,24 +93,69 @@ func PostById(roleid, gid string, w int) {
 func GetMgr(id string) *WsSet {
 	return MGR[hx(id)]
 }
+func calcAvg[T float64](v []T) T {
+	ret := T(0)
+	for _, x := range v {
+		ret += x
+	}
+	return ret / T(len(v))
+}
+func checkTurnoverRateByDay(gid string, day int) float64 {
+	n := len(mId2TurnoverRate[gid])
+	if n <= day {
+		return 0
+	}
+	pre := calcAvg(mId2TurnoverRate[gid][:n-day])
+	cur := calcAvg(mId2TurnoverRate[gid][n-day:])
+	return GetRa(pre, cur)
+}
+func GetNameById(this *WsSet, k string) string {
+	if info, ok := this.mId2ConstInfo[k]; ok {
+		return info.InstrumentName
+	}
+	return "error"
+}
+func CheckTurnoverRate() {
+	msgzy := "重点:\n"
+	msgpt := "普通:\n"
+	for i := 0; i < WSC; i++ {
+		this := MGR[i]
+		for k, v := range this.mId2Dyna {
+			n := len(v)
+			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], v[n-1].TurnoverRate)
+			redis.SaveTurnoverRate(k, v[n-1].TurnoverRate)
+			for ra := 230; ra > 150; ra -= 80 {
+				for d := 7; d > 0; d-- {
+					r := checkTurnoverRateByDay(k, d)
+					if int(r) > ra {
+						if r > 200 {
+							msgzy += fmt.Sprintf("%v  %v %d天换手增长%v\n", GetNameById(this, k), k, d, r)
+						} else {
+							msgpt += fmt.Sprintf("%v  %v %d天换手增长%v\n", GetNameById(this, k), k, d, r)
+						}
+						goto exit
+					}
+
+				}
+			}
+		exit:
+		}
+	}
+
+	if len(msgpt) > 0 {
+		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgpt}}, dingding.KeywordMonitor)
+	}
+	if len(msgzy) > 0 {
+		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
+	}
+	time.AfterFunc(86400*time.Second, func() {
+		CheckTurnoverRate()
+	})
+}
 func updtatodd(x bool) {
-	msg := ""
 	msgzt := ""
 	for i := 0; i < WSC; i++ {
 		this := MGR[i]
-		for k, v := range this.mId2HL {
-
-			if sts, ok := this.mId2BaseData[k]; ok {
-				base := sts.PreClosePrice
-				bd := GetRa(v.Max, base) - GetRa(v.Min, base)
-				if bd > 5 {
-					if info, ok := this.mId2ConstInfo[k]; ok {
-						msg += fmt.Sprintf("%s   %s 波动较大 %.2f%%\n", info.InstrumentID, info.InstrumentName, bd)
-					}
-				}
-			}
-
-		}
 		for k, v := range this.mId2Tick {
 			idx := len(v) - 1
 			if idx < 0 {
@@ -130,7 +175,6 @@ func updtatodd(x bool) {
 		}
 	}
 	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzt}}, dingding.KeywordMonitor)
-	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msg}}, dingding.KeywordMonitor)
 	if x {
 		for _, k := range MGR {
 			k.Stop()
@@ -156,16 +200,6 @@ func daka(msg string) {
 
 // 定时
 func DsMsg() {
-	{
-		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 12:31", time.Local)
-		diff := time.Now().Sub(end)
-
-		diff %= 86400 * time.Second
-		diff = 86400*time.Second - diff
-
-		time.AfterFunc(diff, func() { updtatodd(false) })
-	}
 	{
 		timeFormat := "2006-01-02 15:04"
 		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 15:31", time.Local)
@@ -209,6 +243,18 @@ func DsMsg() {
 
 		time.AfterFunc(diff, func() {
 			daka("主人下班别忘记打卡")
+		})
+	}
+	{
+		timeFormat := "2006-01-02 15:04"
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 20:30", time.Local)
+		diff := time.Now().Sub(end)
+
+		diff %= 86400 * time.Second
+		diff = 86400*time.Second - diff
+
+		time.AfterFunc(diff, func() {
+			CheckTurnoverRate()
 		})
 	}
 }

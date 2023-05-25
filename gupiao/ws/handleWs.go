@@ -29,7 +29,7 @@ func (this *WsSet) handleTick(r dataRes) {
 	//之前成交量数据
 	ra, _ok := this.mId2LB[r.Inst]
 	if !_ok {
-		ra = &VRa{sum: 0, n: 0}
+		ra = &VRa{sum: 0}
 		this.mId2LB[r.Inst] = ra
 	}
 	for _, x := range r.QuoteData.TickData {
@@ -38,16 +38,16 @@ func (this *WsSet) handleTick(r dataRes) {
 		//这次一共多少钱
 		tprice := x.Price * float64(x.Volume)
 
-		if this.mId2Time[r.Inst]+20 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
-			log.WithFields(log.Fields{
-				"tprice/ra.GetAvg()": tprice / ra.GetAvg(),
-				"tprice":             tprice,
-				"ra.GetAvg()":        ra.GetAvg(),
-				" r.Inst":            r.Inst,
-			}).Info("tick波动 ")
-			//	bra = true
-			this.mId2Time[r.Inst] = x.Time
-		}
+		//if this.mId2Time[r.Inst]+20 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
+		//	log.WithFields(log.Fields{
+		//		"tprice/ra.GetAvg()": tprice / ra.GetAvg(),
+		//		"tprice":             tprice,
+		//		"ra.GetAvg()":        ra.GetAvg(),
+		//		" r.Inst":            r.Inst,
+		//	}).Info("tick波动 ")
+		//	//	bra = true
+		//	this.mId2Time[r.Inst] = x.Time
+		//}
 		ra.Push(VRaInnner{val: tprice, t: x.Time})
 
 		if x.Price >= lastPirce {
@@ -61,7 +61,7 @@ func (this *WsSet) handleTick(r dataRes) {
 			if sts, ok := this.mId2BaseData[r.Inst]; ok {
 				base = sts.PreClosePrice
 			} else {
-				log.New().WithField("inst", r.Inst).Error("base empty")
+				log.WithField("inst", r.Inst).Error("base empty")
 			}
 			bflag = true
 			if GetRa(x.Price, base) < 22 {
@@ -137,6 +137,10 @@ func (this *WsSet) checkUnActionByTime(id string, sec int64, run bool) bool {
 	if run == false {
 		return false
 	}
+	now := time.Now().Unix()
+	if this.mId2Time[id]+30 < now {
+		return false
+	}
 	//算法 记录最高点和最低点 如果当前点不是最新的最高点和最低点就不上报
 	low := float64(60000)
 	lidx := -1
@@ -178,6 +182,7 @@ func (this *WsSet) checkUnActionByTime(id string, sec int64, run bool) bool {
 				if lidx == n-1 {
 					ch = "↓↓↓"
 				}
+				this.mId2Time[id] = now
 				SendMsg2Listen(id, fmt.Sprintf("%s 在%d秒异动%s\n%.2f%%  %.2f%%  %.2f%% \n", muban, sec, ch, GetRa(low, base), GetRa(hight, base), diff))
 				log.WithFields(log.Fields{
 					"lowra": GetRa(low, base), "hightra": GetRa(hight, base), "diff": diff,

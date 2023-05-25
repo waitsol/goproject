@@ -47,10 +47,10 @@ func loginit() {
 
 func main() {
 
-	//loginit()
-	//InitVal()
-//	golib.Go(dingding.RecvDDMsg)
-	//wechat.Run()
+	loginit()
+	InitVal()
+	golib.Go(dingding.RecvDDMsg)
+	wechat.Run()
 
 	golib.Go(ws.RunWs)
 
