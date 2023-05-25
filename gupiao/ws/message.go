@@ -129,8 +129,8 @@ func updtatodd(x bool) {
 			}
 		}
 	}
-	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "0", Msg: msgzt}, dingding.KeywordMonitor)
-	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "0", Msg: msg}, dingding.KeywordMonitor)
+	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzt}}, dingding.KeywordMonitor)
+	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msg}}, dingding.KeywordMonitor)
 	if x {
 		for _, k := range MGR {
 			k.Stop()
@@ -147,7 +147,7 @@ func startListen() {
 	time.AfterFunc(86400*time.Second, startListen)
 }
 func daka(msg string) {
-	dingding.SendDingTalkMessage(dingding.DDMsgType{Id: "15358698379", Msg: msg}, dingding.KeywordMonitor)
+	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "15358698379", Msg: msg}}, dingding.KeywordMonitor)
 
 	time.AfterFunc(86400*time.Second, func() {
 		daka(msg)
