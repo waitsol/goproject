@@ -1,9 +1,7 @@
 package main
 
 import (
-	"main/dingding"
 	_ "main/redis"
-	"main/wechat"
 	"main/ws"
 	"time"
 
@@ -29,7 +27,7 @@ func loginit() {
 		logfile+"%Y%m%d_%H.log",                          // 日志文件名加时间
 		rotatelogs.WithLinkName(linkName),                // 始终指向最新的日志文件
 		rotatelogs.WithRotationTime(time.Second*60*60*2), //2小时
-		rotatelogs.WithMaxAge(time.Second*60*60*24*3),    //3天
+		rotatelogs.WithMaxAge(time.Second*60*60*24*7),    //7天
 	)
 	if err != nil {
 		log.Fatal("Failed to create rotator: ", err)
@@ -47,13 +45,12 @@ func loginit() {
 
 func main() {
 
-	loginit()
-	InitVal()
-	golib.Go(dingding.RecvDDMsg)
-	wechat.Run()
+	//loginit()
+	//InitVal()
+	//golib.Go(dingding.RecvDDMsg)
+	//wechat.Run()
 
 	golib.Go(ws.RunWs)
-
 	golib.Wait()
 	log.Info("main exit")
 

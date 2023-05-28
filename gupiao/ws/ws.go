@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/waitsol/golib"
@@ -48,8 +49,28 @@ func hx(id string) int {
 func GetRa(cur, base float64) float64 {
 	return (cur - base) / base * 100
 }
+func clock(f func()) {
+	t1 := time.Now().UnixMilli()
+	f()
+	t2 := time.Now().UnixMilli()
+	fmt.Println(t2 - t1)
+}
 
 func RunWs() {
+	clock(func() {
+		redis.LoadAll()
+	})
+	clock(func() {
+		redis.LoadTurnoverRate("000993")
+	})
+	clock(func() {
+		redis.LoadTurnoverRate("600310")
+	})
+	clock(func() {
+		redis.LoadTurnoverRate("601778")
+	})
+
+	return
 	x, _ := redis.LoadAll()
 	for k, _ := range x {
 		data := redis.LoadTurnoverRate(k)
@@ -58,9 +79,7 @@ func RunWs() {
 			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], f)
 		}
 	}
-	return
 	MGR = make([]*WsSet, WSC)
-
 	for i := 0; i < WSC; i++ {
 		MGR[i] = &WsSet{}
 		golib.Go(func() {
@@ -121,7 +140,7 @@ func startws(i int) {
 	}
 	MGR[i].Init()
 	MGR[i].conn = conn
-	if time.Now().Hour() >= 14 {
+	if time.Now().Hour() >= 24 {
 		MGR[i].Stop()
 	}
 

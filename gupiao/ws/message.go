@@ -2,6 +2,7 @@ package ws
 
 import (
 	"fmt"
+	"main/com"
 	"main/dingding"
 	"main/redis"
 	"sync/atomic"
@@ -116,6 +117,13 @@ func GetNameById(this *WsSet, k string) string {
 	return "error"
 }
 func CheckTurnoverRate() {
+
+	time.AfterFunc(86400*time.Second, func() {
+		CheckTurnoverRate()
+	})
+	if com.IsSend() == false {
+		//		return
+	}
 	msgzy := "重点:\n"
 	msgpt := "普通:\n"
 	for i := 0; i < WSC; i++ {
@@ -148,9 +156,7 @@ func CheckTurnoverRate() {
 	if len(msgzy) > 0 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
 	}
-	time.AfterFunc(86400*time.Second, func() {
-		CheckTurnoverRate()
-	})
+
 }
 func updtatodd(x bool) {
 	msgzt := ""
