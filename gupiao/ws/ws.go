@@ -57,20 +57,7 @@ func clock(f func()) {
 }
 
 func RunWs() {
-	clock(func() {
-		redis.LoadAll()
-	})
-	clock(func() {
-		redis.LoadTurnoverRate("000993")
-	})
-	clock(func() {
-		redis.LoadTurnoverRate("600310")
-	})
-	clock(func() {
-		redis.LoadTurnoverRate("601778")
-	})
 
-	return
 	x, _ := redis.LoadAll()
 	for k, _ := range x {
 		data := redis.LoadTurnoverRate(k)

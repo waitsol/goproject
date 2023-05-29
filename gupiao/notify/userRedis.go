@@ -1,4 +1,4 @@
-package wechat
+package notify
 
 import (
 	"encoding/json"

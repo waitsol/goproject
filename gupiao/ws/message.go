@@ -108,7 +108,7 @@ func checkTurnoverRateByDay(gid string, day int) float64 {
 	}
 	pre := calcAvg(mId2TurnoverRate[gid][:n-day])
 	cur := calcAvg(mId2TurnoverRate[gid][n-day:])
-	return GetRa(pre, cur)
+	return GetRa(cur, pre) + 100
 }
 func GetNameById(this *WsSet, k string) string {
 	if info, ok := this.mId2ConstInfo[k]; ok {
@@ -132,14 +132,14 @@ func CheckTurnoverRate() {
 			n := len(v)
 			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], v[n-1].TurnoverRate)
 			redis.SaveTurnoverRate(k, v[n-1].TurnoverRate)
-			for ra := 230; ra > 150; ra -= 80 {
+			for ra := 330; ra > 250; ra -= 80 {
 				for d := 7; d > 0; d-- {
 					r := checkTurnoverRateByDay(k, d)
 					if int(r) > ra {
-						if r > 200 {
-							msgzy += fmt.Sprintf("%v  %v %d天换手增长%v\n", GetNameById(this, k), k, d, r)
+						if r > 300 {
+							msgzy += fmt.Sprintf("%v  %v\n%d天换手增长%.2f%%\n", GetNameById(this, k), k, d, r)
 						} else {
-							msgpt += fmt.Sprintf("%v  %v %d天换手增长%v\n", GetNameById(this, k), k, d, r)
+							msgpt += fmt.Sprintf("%v  %v\n%d天换手增长%.2f%%\n", GetNameById(this, k), k, d, r)
 						}
 						goto exit
 					}
@@ -150,10 +150,10 @@ func CheckTurnoverRate() {
 		}
 	}
 
-	if len(msgpt) > 0 {
+	if len(msgpt) > 8 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgpt}}, dingding.KeywordMonitor)
 	}
-	if len(msgzy) > 0 {
+	if len(msgzy) > 8 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
 	}
 

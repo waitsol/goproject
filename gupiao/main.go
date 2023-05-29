@@ -1,13 +1,15 @@
 package main
 
 import (
+	"github.com/waitsol/golib"
+	"main/dingding"
+	"main/notify"
 	_ "main/redis"
 	"main/ws"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	log "github.com/sirupsen/logrus"
-	"github.com/waitsol/golib"
 )
 
 var StartWs chan struct{}
@@ -45,13 +47,15 @@ func loginit() {
 
 func main() {
 
-	//loginit()
-	//InitVal()
-	//golib.Go(dingding.RecvDDMsg)
-	//wechat.Run()
+	loginit()
+	InitVal()
+	golib.Go(dingding.RecvDDMsg)
+	notify.Run()
 
 	golib.Go(ws.RunWs)
+	time.Sleep(time.Second * 30)
+	ws.CheckTurnoverRate()
 	golib.Wait()
-	log.Info("main exit")
+	log.Info("main exit ")
 
 }
