@@ -53,8 +53,6 @@ func main() {
 	notify.Run()
 
 	golib.Go(ws.RunWs)
-	time.Sleep(time.Second * 30)
-	ws.CheckTurnoverRate()
 	golib.Wait()
 	log.Info("main exit ")
 

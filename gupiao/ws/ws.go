@@ -66,6 +66,7 @@ func RunWs() {
 			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], f)
 		}
 	}
+	log.Error("load end")
 	MGR = make([]*WsSet, WSC)
 	for i := 0; i < WSC; i++ {
 		MGR[i] = &WsSet{}
@@ -127,7 +128,7 @@ func startws(i int) {
 	}
 	MGR[i].Init()
 	MGR[i].conn = conn
-	if time.Now().Hour() >= 24 {
+	if time.Now().Hour() >= 15 {
 		MGR[i].Stop()
 	}
 

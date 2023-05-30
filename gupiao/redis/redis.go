@@ -82,7 +82,7 @@ func GetDQ(gid string) string {
 }
 func SaveTurnoverRate(gid string, ra float64) {
 	cliRedis.RPush(fmt.Sprintf("TurnoverRate.%v", gid), ra)
-	if cliRedis.LLen(fmt.Sprintf("TurnoverRate.%v", gid)).Val() > 180 {
+	if cliRedis.LLen(fmt.Sprintf("TurnoverRate.%v", gid)).Val() > 40 {
 		cliRedis.LPop(fmt.Sprintf("TurnoverRate.%v", gid))
 	}
 	return
@@ -90,4 +90,12 @@ func SaveTurnoverRate(gid string, ra float64) {
 func LoadTurnoverRate(gid string) []string {
 	x, _ := cliRedis.LRange(fmt.Sprintf("TurnoverRate.%v", gid), 0, -1).Result()
 	return x
+}
+func FixData(gid string) {
+	if cliRedis.LLen(fmt.Sprintf("TurnoverRate.%v", gid)).Val() == 5 {
+		data_, _ := cliRedis.RPop(fmt.Sprintf("TurnoverRate.%v", gid)).Result()
+		cliRedis.RPop(fmt.Sprintf("TurnoverRate.%v", gid)).Result()
+		cliRedis.RPush(fmt.Sprintf("TurnoverRate.%v", gid), data_)
+	}
+	return
 }

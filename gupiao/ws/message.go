@@ -122,24 +122,26 @@ func CheckTurnoverRate() {
 		CheckTurnoverRate()
 	})
 	if com.IsSend() == false {
-		//		return
+		return
 	}
 	msgzy := "重点:\n"
 	msgpt := "普通:\n"
+	dcmsg := "东财导入:\n"
 	for i := 0; i < WSC; i++ {
 		this := MGR[i]
 		for k, v := range this.mId2Dyna {
 			n := len(v)
 			mId2TurnoverRate[k] = append(mId2TurnoverRate[k], v[n-1].TurnoverRate)
 			redis.SaveTurnoverRate(k, v[n-1].TurnoverRate)
-			for ra := 330; ra > 250; ra -= 80 {
+			for ra := 500; ra > 350; ra -= 149 {
 				for d := 7; d > 0; d-- {
 					r := checkTurnoverRateByDay(k, d)
 					if int(r) > ra {
-						if r > 300 {
-							msgzy += fmt.Sprintf("%v  %v\n%d天换手增长%.2f%%\n", GetNameById(this, k), k, d, r)
+						if r >= 500 {
+							msgzy += fmt.Sprintf("%v  %v %d天 %.2f%%\n", GetNameById(this, k), k, d, r)
+							dcmsg += k + "\n"
 						} else {
-							msgpt += fmt.Sprintf("%v  %v\n%d天换手增长%.2f%%\n", GetNameById(this, k), k, d, r)
+							msgpt += fmt.Sprintf("%v  %v %d天 %.2f%%\n", GetNameById(this, k), k, d, r)
 						}
 						goto exit
 					}
@@ -152,9 +154,14 @@ func CheckTurnoverRate() {
 
 	if len(msgpt) > 8 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgpt}}, dingding.KeywordMonitor)
+		time.Sleep(time.Second)
+
 	}
 	if len(msgzy) > 8 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
+		time.Sleep(time.Second)
+		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: dcmsg}}, dingding.KeywordMonitor)
+
 	}
 
 }
@@ -218,7 +225,7 @@ func DsMsg() {
 	}
 	{
 		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 09:26", time.Local)
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 09:27", time.Local)
 		diff := time.Now().Sub(end)
 
 		diff %= 86400 * time.Second
