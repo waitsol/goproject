@@ -1,0 +1,21 @@
+{{ define "login.html" }}  <!--//必须添加的-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>系统登录</title>
+</head>
+<body>
+<h1>用户登录界面</h1>
+<form action="/v1/login" method="post">
+用户名：<input type="text" name="username"><br><br>
+密 &nbsp;码：<input type="password" name="password"><br><br>
+<input type="submit" value="登录">
+</form>
+ 
+</body>
+</html>
+ 
+ 
+<!--//必须添加的-->
+{{end}}

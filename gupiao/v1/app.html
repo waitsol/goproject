@@ -1,0 +1,33 @@
+{{ define "app.html" }}  <!--//必须添加的-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>阿斯顿撒旦</title>
+</head>
+<body>
+<h1>操作</h1>
+<form action="/v1/add" method="post">
+股票id：<input type="text" name="id"><br><br>
+<input type="submit" value="提交">
+</form>
+<br><br>
+<form action="/v1/set" method="post">
+    股票id：<input type="text" name="id"><br><br>
+    关注量：<input type="text" name="count"><br><br>
+    <input type="submit" value="提交">
+ </form> 
+ <br><br>
+ <form action="/v1/clear" method="post">
+    <input type="submit" value="清空">
+ </form> 
+ <br><br>
+ <form action="/v1/list" method="post">
+    <input type="submit" value="列表">
+ </form> 
+</body>
+</html>
+ 
+ 
+<!--//必须添加的-->
+{{end}}
