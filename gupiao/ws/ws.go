@@ -3,14 +3,15 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
-	"github.com/waitsol/golib"
 	"main/redis"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
+	"github.com/waitsol/golib"
 )
 
 const (
@@ -141,9 +142,12 @@ func startws(i int) {
 		_, b, err := conn.ReadMessage()
 		if err != nil {
 			log.Error(err)
+			conn.Close()
 			//ws断开重启
 			stopc <- false
-			startws(i)
+			golib.Go(func() {
+				startws(i)
+			})
 			return
 		}
 		pong := Pong{}
