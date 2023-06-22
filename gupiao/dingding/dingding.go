@@ -86,7 +86,7 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 	if err != nil {
 		log.Error(err)
 	} else {
-		log.Error(resp)
+		log.Info(resp)
 	}
 	return nil
 }

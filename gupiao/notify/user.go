@@ -38,7 +38,7 @@ func (this *Follow) follow(id string) string {
 		return "取关成功"
 	} else {
 		if _, ok := this.FollowsId[id]; !ok {
-			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 200}
+			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 2000}
 		}
 		this.FollowsId[id].Ok = true
 

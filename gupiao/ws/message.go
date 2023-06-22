@@ -126,7 +126,6 @@ func CheckTurnoverRate() {
 	}
 	msgzy := "重点:\n"
 	msgpt := "普通:\n"
-	dcmsg := "东财导入:\n"
 	for i := 0; i < WSC; i++ {
 		this := MGR[i]
 		for k, v := range this.mId2Dyna {
@@ -139,7 +138,6 @@ func CheckTurnoverRate() {
 					if int(r) > ra {
 						if r >= 500 {
 							msgzy += fmt.Sprintf("%v  %v %d天 %.2f%%\n", GetNameById(this, k), k, d, r)
-							dcmsg += k + "\n"
 						} else {
 							msgpt += fmt.Sprintf("%v  %v %d天 %.2f%%\n", GetNameById(this, k), k, d, r)
 						}
@@ -160,7 +158,6 @@ func CheckTurnoverRate() {
 	if len(msgzy) > 8 {
 		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
 		time.Sleep(time.Second)
-		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: dcmsg}}, dingding.KeywordMonitor)
 
 	}
 
