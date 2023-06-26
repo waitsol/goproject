@@ -27,6 +27,7 @@ var checkSecs = []int64{3, 10, 30, 60, 120, 300}
 var checkCnts = []int{10, 20, 30, 50, 100}
 
 var mId2Post map[string]Empty
+var mu sync.Mutex
 
 func init() {
 	mId2Post = map[string]Empty{}
@@ -81,6 +82,8 @@ func RunWs() {
 }
 func load(wsidx int) {
 	//加载所有股票
+	mu.Lock()
+	defer mu.Unlock()
 	data, err := redis.LoadAll()
 	if err == nil {
 		for gpid, dq := range data {
