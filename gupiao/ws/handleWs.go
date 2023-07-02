@@ -315,7 +315,7 @@ func (this *WsSet) checkUnActionMaxMin(r dataRes) {
 			} else {
 				log.WithFields(log.Fields{
 					"r.Inst": r.Inst, " x.HighestPrice": x.HighestPrice, "x.LowestPrice": x.LowestPrice,
-				}).Error("err dyna:")
+				}).Warn("err dyna:")
 			}
 		}
 	}
