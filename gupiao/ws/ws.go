@@ -143,14 +143,17 @@ func startws(i int) {
 	load(i)
 	for {
 		_, b, err := conn.ReadMessage()
-		if err != nil {
+		if err == nil {
 			log.Error(err)
-			conn.Close()
+			err := conn.Close()
+			if err != nil {
+				log.Error(err)
+			}
 			//ws断开重启
-			stopc <- false
-			golib.Go(func() {
-				startws(i)
-			})
+			log.Info("close ping chan")
+			close(stopc)
+			log.Infof("re start ws %d", i)
+			startws(i)
 			return
 		}
 		pong := Pong{}

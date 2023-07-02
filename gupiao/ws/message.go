@@ -2,6 +2,7 @@ package ws
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"main/com"
 	"main/dingding"
 	"main/redis"
@@ -11,13 +12,16 @@ import (
 
 func (this *WsSet) Ping(stopc chan bool) {
 	ping := PingType{ServiceType: "ping"}
-	ticker := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	select {
 	case <-ticker.C:
 		{
-			this.conn.WriteJSON(ping)
+			if this.conn != nil {
+				this.conn.WriteJSON(ping)
+			}
 		}
 	case <-stopc:
+		log.Info("ping func exit")
 		return
 
 	}
