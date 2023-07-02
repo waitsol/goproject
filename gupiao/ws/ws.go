@@ -143,7 +143,7 @@ func startws(i int) {
 	load(i)
 	for {
 		_, b, err := conn.ReadMessage()
-		if err == nil {
+		if err != nil {
 			log.Error(err)
 			err := conn.Close()
 			if err != nil {
