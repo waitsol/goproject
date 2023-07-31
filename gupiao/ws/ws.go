@@ -30,6 +30,9 @@ var mId2Post map[string]Empty
 var mu sync.Mutex
 
 func init() {
+	Init()
+}
+func Init() {
 	mId2Post = map[string]Empty{}
 }
 
@@ -79,6 +82,9 @@ func RunWs() {
 	}
 	//定时消息
 	DsMsg()
+	time.AfterFunc(time.Hour, func() {
+		Init()
+	})
 }
 func load(wsidx int) {
 	//加载所有股票

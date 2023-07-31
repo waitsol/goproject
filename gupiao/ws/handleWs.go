@@ -26,6 +26,9 @@ func (this *WsSet) handleTick(r dataRes) {
 	bcheck := false
 	ch := "↑"
 	lastPirce := float64(0)
+	if len(this.mId2Tick[r.Inst]) > 0 {
+		lastPirce = this.mId2Tick[r.Inst][len(this.mId2Tick[r.Inst])-1].Price
+	}
 	//之前成交量数据
 	ra, _ok := this.mId2LB[r.Inst]
 	if !_ok {
