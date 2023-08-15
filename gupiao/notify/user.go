@@ -41,6 +41,9 @@ func (this *Follow) follow(id string) string {
 			this.FollowsId[id] = &FollowSt{Ok: true, WarnMsg: 2000}
 		}
 		this.FollowsId[id].Ok = true
+		if this.FollowsId[id].WarnMsg < 1000 {
+			this.FollowsId[id].WarnMsg = 1000
+		}
 
 		ws.PostById(this.Id, id, this.FollowsId[id].WarnMsg)
 	}

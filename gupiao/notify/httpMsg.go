@@ -63,10 +63,7 @@ func login(c *gin.Context) {
 	ip := c.Request.RemoteAddr
 	fmt.Println("ip = ", ip)
 	fmt.Println(c.Request.Header)
-	if x, ok := zhanghao[user]; ok && x == passwd || x == "1" {
-		if x == "1" {
-			user = "15358698379"
-		}
+	if x, ok := zhanghao[user]; ok && x == passwd {
 		ip2id[ip] = user
 		fmt.Println(c.Keys)
 		c.HTML(http.StatusOK, "app.html", gin.H{})
