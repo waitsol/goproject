@@ -14,9 +14,10 @@ import (
 
 type Ws struct {
 	*websocket.Conn
-	s      int
-	status int
-	wQueue chan *Payload
+	s       int
+	status  int
+	wQueue  chan *Payload
+	session string
 }
 
 func (ws *Ws) write() {
@@ -47,6 +48,20 @@ func (ws *Ws) recvMsg() {
 	for true {
 		_, b, err := ws.ReadMessage()
 		if err != nil {
+			if websocket.IsCloseError(err, 4009) {
+				payload := &Payload{}
+				payload.Op = 6
+				d := make(map[string]interface{}, 30)
+
+				d["token"] = getToken()
+				d["session_id"] = ws.session
+				d["seq"] = ws.s
+				payload.D = d
+				//create session
+				ws.WriteJSON(payload)
+				continue
+			}
+
 			log.Error("readmsg error = ", err)
 			return
 		}
@@ -138,7 +153,19 @@ func connectWs() *Ws {
 	reply = Payload{}
 	json.Unmarshal(b, &reply)
 	log.Info("recv  session------------", string(b))
-	ws := Ws{status: 1, Conn: conn, s: reply.S}
+
+	D, ok := reply.D.(map[string]interface{})
+
+	if !ok {
+		log.Error("session D error")
+		os.Exit(-1)
+	}
+	session, ok := D["session_id"].(string)
+	if !ok || len(session) == 0 {
+		log.Error("session  null")
+		os.Exit(-1)
+	}
+	ws := Ws{status: 1, Conn: conn, s: reply.S, session: session}
 	ws.wQueue = make(chan *Payload, 20)
 	golib.Go(func() {
 		ws.heartBeat()
