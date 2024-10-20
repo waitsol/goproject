@@ -139,7 +139,7 @@ func startws(i int) {
 	MGR[i].Init()
 	MGR[i].conn = conn
 	if time.Now().Hour() >= 15 || time.Now().Hour() <= 9 {
-		MGR[i].Stop()
+		//		MGR[i].Stop()
 	}
 
 	stopc := make(chan bool)

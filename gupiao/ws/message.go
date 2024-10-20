@@ -5,10 +5,19 @@ import (
 	log "github.com/sirupsen/logrus"
 	"main/com"
 	"main/dingding"
+	"main/onebot11"
 	"main/redis"
 	"sync/atomic"
 	"time"
 )
+
+var (
+	im com.Notify_xx
+)
+
+func init() {
+	im = &onebot11.Onebot11Ntf{}
+}
 
 func (this *WsSet) Ping(stopc chan bool) {
 	ping := PingType{ServiceType: "ping"}
@@ -155,17 +164,19 @@ func CheckTurnoverRate() {
 	}
 
 	if len(msgpt) > 8 {
-		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgpt}}, dingding.KeywordMonitor)
+		im.SendMsg(msgpt, nil)
 		time.Sleep(time.Second)
 
 	}
 	if len(msgzy) > 8 {
-		dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzy}}, dingding.KeywordMonitor)
+		im.SendMsg(msgzy, nil)
 		time.Sleep(time.Second)
 
 	}
 
 }
+
+// 涨停
 func updtatodd(x bool) {
 	msgzt := ""
 	for i := 0; i < WSC; i++ {
@@ -188,7 +199,8 @@ func updtatodd(x bool) {
 			}
 		}
 	}
-	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzt}}, dingding.KeywordMonitor)
+	im.SendMsg(msgzt, nil)
+	//	dingding.SendDingTalkMessage([]dingding.DDMsgType{{Id: "0", Msg: msgzt}}, dingding.KeywordMonitor)
 	if x {
 		for _, k := range MGR {
 			k.Stop()
@@ -216,7 +228,7 @@ func daka(msg string) {
 func DsMsg() {
 	{
 		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 15:31", time.Local)
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:00", time.Local)
 		diff := time.Now().Sub(end)
 
 		diff %= 86400 * time.Second
@@ -234,31 +246,31 @@ func DsMsg() {
 
 		time.AfterFunc(diff, startListen)
 
-	}
-	{
-		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 09:28", time.Local)
-		diff := time.Now().Sub(end)
+	} /*
+		{
+			timeFormat := "2006-01-02 15:04"
+			end, _ := time.ParseInLocation(timeFormat, "2022-04-08 09:28", time.Local)
+			diff := time.Now().Sub(end)
 
-		diff %= 86400 * time.Second
-		diff = 86400*time.Second - diff
+			diff %= 86400 * time.Second
+			diff = 86400*time.Second - diff
 
-		time.AfterFunc(diff, func() {
-			daka("主人上班别忘记打卡")
-		})
-	}
-	{
-		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:30", time.Local)
-		diff := time.Now().Sub(end)
+			time.AfterFunc(diff, func() {
+				daka("主人上班别忘记打卡")
+			})
+		}
+		{
+			timeFormat := "2006-01-02 15:04"
+			end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:30", time.Local)
+			diff := time.Now().Sub(end)
 
-		diff %= 86400 * time.Second
-		diff = 86400*time.Second - diff
+			diff %= 86400 * time.Second
+			diff = 86400*time.Second - diff
 
-		time.AfterFunc(diff, func() {
-			daka("主人下班别忘记打卡")
-		})
-	}
+			time.AfterFunc(diff, func() {
+				daka("主人下班别忘记打卡")
+			})
+		}*/
 	{
 		timeFormat := "2006-01-02 15:04"
 		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 20:30", time.Local)

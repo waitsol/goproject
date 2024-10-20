@@ -59,13 +59,13 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			debug.PrintStack()
 		}
 	}()
-	v := stringSplit(msg, '_')
+	v := stringSplit(msg, ' ')
 	if len(v) == 0 {
-		return false, ""
+		return false, "填的什么玩意"
 	}
-	if checkGpNum(v[0]) {
-		return true, this.follow(v[0])
-	} else if v[0] == "set" {
+	if v[0] == "/u" && len(v) == 2 && checkGpNum(v[1]) {
+		return true, this.follow(v[1])
+	} else if v[0] == "/set" {
 		if len(v) == 3 && checkGpNum(v[1]) {
 			x, err := strconv.Atoi(v[2])
 			if err != nil || x < 200 {
@@ -81,13 +81,13 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 		} else {
 			return true, "err args"
 		}
-	} else if v[0] == "list" {
+	} else if v[0] == "/list" {
 		return true, this.getList()
-	} else if v[0] == "clear" {
+	} else if v[0] == "/clear" {
 		this.clearUserFollow(this.Id)
 		return true, "ok"
 	}
-	return false, ""
+	return false, "填的什么玩意"
 }
 func GetFollow(id string) *Follow {
 	if MIdFollow == nil {

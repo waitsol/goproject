@@ -1,9 +1,5 @@
 package ws
 
-import (
-	"main/dingding"
-)
-
 func DelFollow(gid, uid string) {
 
 	load, ok := SyncId2Listener.Load(gid)
@@ -22,5 +18,8 @@ func AddFollow(gid, uid string, val int) {
 }
 func SendMsg(id, msg string) {
 	//MsgChan <- MsgType{id, msg}
-	dingding.DdMsg <- dingding.DDMsgType{Id: id, Msg: msg}
+	//dingding.DdMsg <- dingding.DDMsgType{Id: id, Msg: msg}
+	m := map[string]interface{}{}
+	m["id"] = id
+	im.SendMsg(msg, m)
 }

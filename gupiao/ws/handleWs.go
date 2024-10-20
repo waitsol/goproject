@@ -95,6 +95,7 @@ func (this *WsSet) handleTick(r dataRes) {
 				}
 				if bflag {
 					SendMsg(name, smsg)
+					break //没分流 直接break
 				}
 			}
 
@@ -314,11 +315,11 @@ func (this *WsSet) checkUnActionMaxMin(r dataRes) {
 		for _, x := range r.QuoteData.DynaData {
 			if x.LowestPrice > 0 {
 				this.mId2HL[r.Inst] = &HL{Max: x.HighestPrice, Min: x.LowestPrice}
-				log.Info("--- ", r.Inst, x.HighestPrice, x.LowestPrice)
+				//log.Info("--- ", r.Inst, x.HighestPrice, x.LowestPrice)
 			} else {
-				log.WithFields(log.Fields{
-					"r.Inst": r.Inst, " x.HighestPrice": x.HighestPrice, "x.LowestPrice": x.LowestPrice,
-				}).Warn("err dyna:")
+				//log.WithFields(log.Fields{
+				//	"r.Inst": r.Inst, " x.HighestPrice": x.HighestPrice, "x.LowestPrice": x.LowestPrice,
+				//}).Warn("err dyna:")
 			}
 		}
 	}

@@ -47,7 +47,7 @@ func init() {
 	}
 	url, err := cliRedis.Get("wmurl").Result()
 	if err != nil || len(url) == 0 {
-		panic("redis no url")
+		//panic("redis no url")
 	}
 	dingding.DDURL = url
 	log.Info(dingding.DDURL)

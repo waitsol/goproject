@@ -91,7 +91,7 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 	return nil
 }
 
-func RecvDDMsg() {
+func RecvDDMsg() { //钉钉缓存
 	tick := time.NewTicker(4 * time.Second)
 	cache := map[string]string{}
 	for {
