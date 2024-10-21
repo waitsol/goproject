@@ -90,7 +90,7 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 	} else if v[0] == "/Info" {
 		result := ""
 		for k, v := range this.FollowsId {
-			result = fmt.Sprintf("%s%s : %s\n", result, k, v.WarnMsg)
+			result = fmt.Sprintf("%s%s : %d\n", result, k, v.WarnMsg)
 		}
 		return true, result
 	}

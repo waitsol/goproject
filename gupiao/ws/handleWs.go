@@ -88,7 +88,7 @@ func (this *WsSet) handleTick(r dataRes) {
 				smsg := muban
 				bflag = false
 				for i := 0; i < n; i++ {
-					if v[i] >= needlen {
+					if v[i] >= needlen*OneHand {
 						smsg += str[i]
 						bflag = true
 					}
