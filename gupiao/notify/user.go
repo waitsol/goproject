@@ -87,10 +87,10 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 	} else if v[0] == "/clear" {
 		this.clearUserFollow(this.Id)
 		return true, "ok"
-	} else if v[0] == "/info" {
+	} else if v[0] == "/Info" {
 		result := ""
 		for k, v := range this.FollowsId {
-			fmt.Sprintf("%s%s : %s\n", result, k, v.WarnMsg)
+			result = fmt.Sprintf("%s%s : %s\n", result, k, v.WarnMsg)
 		}
 		return true, result
 	}

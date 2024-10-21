@@ -74,6 +74,9 @@ func handleMsg(reply *Payload) {
 			return
 		}
 		_, res := notify.GetFollow(author["member_openid"].(string)).HandleMessage(content)
+		if res == "" {
+			res = "没数据"
+		}
 		sendMsg(res, id, group_id)
 	} else {
 		sendMsg("哪里不对劲", "1", "1")
