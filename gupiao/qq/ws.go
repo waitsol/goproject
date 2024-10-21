@@ -18,6 +18,7 @@ type Ws struct {
 	status  int
 	wQueue  chan *Payload
 	session string
+	url     string
 }
 
 func (ws *Ws) write() {
@@ -41,29 +42,18 @@ func (ws *Ws) heartBeat() {
 		time.Sleep(time.Second * 20)
 	}
 }
+func (ws *Ws) stop() {
+	ws.status = 0
+	ws.Close()
+}
 func (ws *Ws) recvMsg() {
-	defer func() {
-		os.Exit(-1)
-	}()
-	for true {
+	for {
 		_, b, err := ws.ReadMessage()
 		if err != nil {
-			if websocket.IsCloseError(err, 4009) {
-				payload := &Payload{}
-				payload.Op = 6
-				d := make(map[string]interface{}, 30)
-
-				d["token"] = getToken()
-				d["session_id"] = ws.session
-				d["seq"] = ws.s
-				payload.D = d
-				//create session
-				ws.WriteJSON(payload)
-				continue
-			}
-
 			log.Error("readmsg error = ", err)
-			return
+			ws.stop()
+			connectWs()
+			break
 		}
 		reply := Payload{}
 		json.Unmarshal(b, &reply)
