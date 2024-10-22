@@ -33,13 +33,18 @@ func (ws *Ws) write() {
 	}
 
 }
-func (ws *Ws) heartBeat() {
+func (ws *Ws) heartBeat(t time.Duration) {
 	payload := &Payload{}
-	payload.Op = 0
-	for ws.status == 1 {
+	payload.Op = 1
+	for {
+		time.Sleep(time.Millisecond * t)
+		if ws.status == 0 {
+			return
+		}
 		payload.D = ws.s
-		ws.Conn.WriteJSON(payload)
-		time.Sleep(time.Second * 20)
+
+		err := ws.Conn.WriteJSON(payload)
+		log.Info("send heartBeat  ", payload, err)
 	}
 }
 func (ws *Ws) stop() {
@@ -53,11 +58,15 @@ func (ws *Ws) recvMsg() {
 			log.Error("readmsg error = ", err)
 			ws.stop()
 			connectWs()
-			break
+			return
 		}
 		reply := Payload{}
 		json.Unmarshal(b, &reply)
+		ws.s = reply.S
 		log.Info("recv ", string(b))
+		if reply.Op == 11 {
+			continue
+		}
 		handleMsg(&reply)
 	}
 }
@@ -124,7 +133,7 @@ func connectWs() *Ws {
 	reply := Payload{}
 	json.Unmarshal(b, &reply)
 	log.Info("recv  GateWay------------", string(b))
-
+	heart := reply.D.(map[string]interface{})["heartbeat_interval"].(float64)
 	payload := &Payload{}
 	payload.Op = 2
 	d := make(map[string]interface{}, 30)
@@ -161,7 +170,7 @@ func connectWs() *Ws {
 	ws := Ws{status: 1, Conn: conn, s: reply.S, session: session}
 	ws.wQueue = make(chan *Payload, 20)
 	golib.Go(func() {
-		ws.heartBeat()
+		ws.heartBeat(time.Duration(heart))
 	})
 	golib.Go(func() {
 		ws.recvMsg()
