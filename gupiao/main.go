@@ -3,12 +3,12 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/waitsol/golib"
+	"main/jfzt"
 	_ "main/log"
 	"main/notify"
 	_ "main/onebot11"
 	"main/qq"
 	_ "main/redis"
-	"main/ws"
 )
 
 var StartWs chan struct{}
@@ -25,7 +25,7 @@ func main() {
 	InitVal()
 	notify.Run()
 
-	golib.Go(ws.RunWs)
+	golib.Go(jfzt.RunWs)
 	golib.Wait()
 	log.Info("main exit ")
 
