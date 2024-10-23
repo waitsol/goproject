@@ -17,7 +17,7 @@ import (
 const (
 	OneHand   = 100
 	WarnHL    = 1
-	WarnRatio = 230
+	WarnRatio = 2
 	LB        = 300
 	WarnCheck = 2
 )

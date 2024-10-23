@@ -39,7 +39,7 @@ func (this *WsSet) handleTick(r dataRes) {
 		bcheck = true
 		this.mId2Tick[r.Inst] = append(this.mId2Tick[r.Inst], x)
 		//这次一共多少钱
-		tprice := x.Price * float64(x.Volume)
+		//tprice := x.Price * float64(x.Volume)
 
 		//if this.mId2Time[r.Inst]+20 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
 		//	log.WithFields(log.Fields{
@@ -51,8 +51,7 @@ func (this *WsSet) handleTick(r dataRes) {
 		//	//	bra = true
 		//	this.mId2Time[r.Inst] = x.Time
 		//}
-		ra.Push(VRaInnner{val: tprice, t: x.Time})
-
+		//ra.Push(VRaInnner{val: tprice, t: x.Time})
 		if x.Price >= lastPirce {
 			ch = "↑"
 		} else {
@@ -69,6 +68,7 @@ func (this *WsSet) handleTick(r dataRes) {
 			bflag = true
 			if GetRa(x.Price, base) < 22 {
 				str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", GetRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
+				log.Info(str)
 				v = append(v, x.Volume)
 			} else {
 				log.WithFields(log.Fields{
@@ -83,24 +83,23 @@ func (this *WsSet) handleTick(r dataRes) {
 		//给关注这个股票的人发消息
 		load, ok := SyncId2Listener.Load(r.Inst)
 		if ok {
-			listens := load.(map[string]int)
-			for name, needlen := range listens {
+			listens := load.(map[string]*followInfo)
+			for name, info := range listens {
 				smsg := muban
 				bflag = false
 				for i := 0; i < n; i++ {
-					if v[i] >= needlen*OneHand {
+					if v[i] >= info.num*OneHand {
 						smsg += str[i]
 						bflag = true
 					}
 				}
-				if bflag {
+				if false == bflag {
 					SendMsg(name, smsg)
 					break //没分流 直接break
 				}
 			}
 
 		}
-
 	}
 	if bcheck {
 		run := true
@@ -112,6 +111,28 @@ func (this *WsSet) handleTick(r dataRes) {
 			run = this.checkUnActionByCount(r.Inst, cnt, run)
 		}
 
+	}
+
+	if sts, ok := this.mId2BaseData[r.Inst]; ok {
+		base := sts.PreClosePrice
+		curra := GetRa(lastPirce, base)
+		load, ok := SyncId2Listener.Load(r.Inst)
+		if ok {
+			listens := load.(map[string]*followInfo)
+			for id := range listens {
+				x := listens[id]
+				if x != nil {
+					if curra >= x.maxRa {
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.maxRa, curra))
+						x.maxRa = 200 //就提醒一次
+					}
+					if curra <= x.minRa {
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.minRa, curra))
+						x.minRa = -200
+					}
+				}
+			}
+		}
 	}
 	//
 	//if bra {
@@ -127,10 +148,9 @@ func (this *WsSet) handleTick(r dataRes) {
 	//}
 }
 func SendMsg2Listen(inst, msg string) {
-
 	load, ok := SyncId2Listener.Load(inst)
 	if ok {
-		listens := load.(map[string]int)
+		listens := load.(map[string]*followInfo)
 		for name, _ := range listens {
 			SendMsg(name, msg)
 		}
@@ -142,7 +162,7 @@ func (this *WsSet) checkUnActionByTime(id string, sec int64, run bool) bool {
 		return false
 	}
 	now := time.Now().Unix()
-	if this.mId2Time[id]+30 < now {
+	if this.mId2Time[id]+30 > now {
 		return false
 	}
 	//算法 记录最高点和最低点 如果当前点不是最新的最高点和最低点就不上报
@@ -246,7 +266,6 @@ func (this *WsSet) checkUnActionByCount(id string, cnt int, run bool) bool {
 			ra1 := GetRa(hight, base)
 			ra2 := GetRa(low, base)
 			diff := ra1 - ra2
-			//fmt.Println("...", hidx, low, diff, base)
 			if diff >= WarnRatio && diff < 20 {
 				ch := "↑↑↑"
 				if lidx == n-1 {

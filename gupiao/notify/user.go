@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"main/redis"
 	"main/ws"
+	"math"
 	"runtime/debug"
 	"strconv"
 
@@ -93,6 +94,29 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			result = fmt.Sprintf("%s%s : %d\n", result, k, v.WarnMsg)
 		}
 		return true, result
+	} else if v[0] == "/min" {
+		if len(v) == 3 && checkGpNum(v[1]) {
+			x, err := strconv.Atoi(v[2])
+			if err != nil || math.Abs(float64(x)) > 21 {
+				return true, "err " + v[2]
+			}
+
+			ws.SetFollowMinRa(v[1], this.Id, float64(x))
+			return true, "ok"
+		} else {
+			return true, "err args"
+		}
+	} else if v[0] == "/max" {
+		if len(v) == 3 && checkGpNum(v[1]) {
+			x, err := strconv.Atoi(v[2])
+			if err != nil || math.Abs(float64(x)) > 21 {
+				return true, "err " + v[2]
+			}
+			ws.SetFollowMaxRa(v[1], this.Id, float64(x))
+			return true, "ok"
+		} else {
+			return true, "err args"
+		}
 	}
 	return false, "填的什么玩意"
 }

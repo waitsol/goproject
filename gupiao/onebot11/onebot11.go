@@ -21,7 +21,7 @@ func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 	id := m["id"]
 	if id != nil && len(id.(string)) > 0 {
 		funcQueue <- func() {
-			x.sendMsg2group(context, id.(string)) //都发群
+			x.sendMsg2user(context, id.(string)) //都发群
 		}
 	}
 	group_id := m["group_id"]
