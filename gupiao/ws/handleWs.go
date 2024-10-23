@@ -68,7 +68,7 @@ func (this *WsSet) handleTick(r dataRes) {
 			bflag = true
 			if GetRa(x.Price, base) < 22 {
 				str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", GetRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
-				log.Info(str)
+				//log.Info(str)
 				v = append(v, x.Volume)
 			} else {
 				log.WithFields(log.Fields{
@@ -93,7 +93,7 @@ func (this *WsSet) handleTick(r dataRes) {
 						bflag = true
 					}
 				}
-				if false == bflag {
+				if bflag {
 					SendMsg(name, smsg)
 					break //没分流 直接break
 				}
