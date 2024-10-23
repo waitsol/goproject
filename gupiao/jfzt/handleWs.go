@@ -1,4 +1,4 @@
-package ws
+package jfzt
 
 import (
 	"fmt"
@@ -78,12 +78,13 @@ func (this *WsSet) handleTick(r dataRes) {
 		}
 	}
 
-	if bflag {
+	if bflag && r.Inst == "601162" {
 		n := len(v)
 		//给关注这个股票的人发消息
 		load, ok := SyncId2Listener.Load(r.Inst)
 		if ok {
 			listens := load.(map[string]*followInfo)
+			bF := true
 			for name, info := range listens {
 				smsg := muban
 				bflag = false
@@ -94,8 +95,8 @@ func (this *WsSet) handleTick(r dataRes) {
 					}
 				}
 				if bflag {
-					SendMsg(name, smsg)
-					break //没分流 直接break
+					SendMsg(name, smsg, bF)
+					bF = false
 				}
 			}
 
@@ -119,15 +120,16 @@ func (this *WsSet) handleTick(r dataRes) {
 		load, ok := SyncId2Listener.Load(r.Inst)
 		if ok {
 			listens := load.(map[string]*followInfo)
+
 			for id := range listens {
 				x := listens[id]
 				if x != nil {
 					if curra >= x.maxRa {
-						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.maxRa, curra))
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.maxRa, curra), false)
 						x.maxRa = 200 //就提醒一次
 					}
 					if curra <= x.minRa {
-						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.minRa, curra))
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.minRa, curra), false)
 						x.minRa = -200
 					}
 				}
@@ -151,8 +153,10 @@ func SendMsg2Listen(inst, msg string) {
 	load, ok := SyncId2Listener.Load(inst)
 	if ok {
 		listens := load.(map[string]*followInfo)
+		flag := true
 		for name, _ := range listens {
-			SendMsg(name, msg)
+			SendMsg(name, msg, flag)
+			flag = false
 		}
 	}
 

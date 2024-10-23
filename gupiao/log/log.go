@@ -28,8 +28,8 @@ func (f *Formatter) Format(entry *log.Entry) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 func init() {
-	logfile := "log/server_"
-	linkName := "log/latest_log.log"
+	logfile := "logs/server_"
+	linkName := "logs/latest_log.log"
 	// 日志文件保留的时间
 
 	// 创建日志轮转器

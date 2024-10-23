@@ -3,8 +3,8 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
+	"main/jfzt"
 	"main/redis"
-	"main/ws"
 	"math"
 	"runtime/debug"
 	"strconv"
@@ -32,7 +32,7 @@ func (this *Follow) follow(id string) string {
 	//如果关注了
 	if x, ok := this.FollowsId[id]; ok && x.Ok {
 		//退出WS监听
-		ws.DelFollow(id, this.Id)
+		jfzt.DelFollow(id, this.Id)
 		//关闭自己列表监听
 		this.FollowsId[id].Ok = false
 		//保存自己信息
@@ -47,7 +47,7 @@ func (this *Follow) follow(id string) string {
 			this.FollowsId[id].WarnMsg = 1000
 		}
 
-		ws.PostById(this.Id, id, this.FollowsId[id].WarnMsg)
+		jfzt.PostById(this.Id, id, this.FollowsId[id].WarnMsg)
 	}
 
 	SaveUserFollow(*this)
@@ -65,20 +65,22 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 	if len(v) == 0 {
 		return false, "填的什么玩意"
 	}
-	if v[0] == "/u" && len(v) == 2 && checkGpNum(v[1]) {
-		return true, this.follow(v[1])
+	if v[0] == "/u" && len(v) == 2 && getRealGpNum(v[1]) != "" {
+
+		return true, this.follow(getRealGpNum(v[1]))
 	} else if v[0] == "/set" {
-		if len(v) == 3 && checkGpNum(v[1]) {
+		num := getRealGpNum(v[1])
+		if len(v) == 3 && num != "" {
 			x, err := strconv.Atoi(v[2])
 			if err != nil || x < 200 {
 				return true, "err " + v[2]
 			}
-			if this.FollowsId[v[1]] == nil {
-				this.FollowsId[v[1]] = &FollowSt{Ok: false}
+			if this.FollowsId[num] == nil {
+				this.FollowsId[num] = &FollowSt{Ok: false}
 			}
-			this.FollowsId[v[1]].WarnMsg = x
+			this.FollowsId[num].WarnMsg = x
 			SaveUserFollow(*this)
-			ws.AddFollow(v[1], this.Id, this.FollowsId[v[1]].WarnMsg)
+			jfzt.AddFollow(num, this.Id, this.FollowsId[num].WarnMsg)
 			return true, "ok"
 		} else {
 			return true, "err args"
@@ -89,30 +91,30 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 		this.clearUserFollow(this.Id)
 		return true, "ok"
 	} else if v[0] == "/Info" {
-		result := ""
+		result := "\n"
 		for k, v := range this.FollowsId {
-			result = fmt.Sprintf("%s%s : %d\n", result, k, v.WarnMsg)
+			result = fmt.Sprintf("%s%s : %d 监听:%v\n", result, Id2Name(k), v.WarnMsg, v.Ok)
 		}
 		return true, result
 	} else if v[0] == "/min" {
-		if len(v) == 3 && checkGpNum(v[1]) {
+		if len(v) == 3 && getRealGpNum(v[1]) != "" {
 			x, err := strconv.Atoi(v[2])
 			if err != nil || math.Abs(float64(x)) > 21 {
 				return true, "err " + v[2]
 			}
 
-			ws.SetFollowMinRa(v[1], this.Id, float64(x))
+			jfzt.SetFollowMinRa(getRealGpNum(v[1]), this.Id, float64(x))
 			return true, "ok"
 		} else {
 			return true, "err args"
 		}
 	} else if v[0] == "/max" {
-		if len(v) == 3 && checkGpNum(v[1]) {
+		if len(v) == 3 && getRealGpNum(v[1]) != "" {
 			x, err := strconv.Atoi(v[2])
 			if err != nil || math.Abs(float64(x)) > 21 {
 				return true, "err " + v[2]
 			}
-			ws.SetFollowMaxRa(v[1], this.Id, float64(x))
+			jfzt.SetFollowMaxRa(getRealGpNum(v[1]), this.Id, float64(x))
 			return true, "ok"
 		} else {
 			return true, "err args"
@@ -157,7 +159,7 @@ func (this *Follow) clearUserFollow(uid string) {
 	//先删除自己关注的
 	for gid, v := range this.FollowsId {
 		v.Ok = false
-		ws.DelFollow(gid, uid)
+		jfzt.DelFollow(gid, uid)
 	}
 	SaveUserFollow(*this)
 }
@@ -168,7 +170,7 @@ func (this *Follow) getList() string {
 			v = append(v, id)
 		}
 	}
-	return ws.GetList(v)
+	return jfzt.GetList(v)
 }
 
 // 处理关注列表
@@ -181,7 +183,7 @@ func loadFollow() {
 				MIdFollow[wechatid] = f
 				for gid, v := range f.FollowsId {
 					if v.Ok {
-						ws.AddFollow(gid, wechatid, v.WarnMsg)
+						jfzt.AddFollow(gid, wechatid, v.WarnMsg)
 					}
 				}
 			}

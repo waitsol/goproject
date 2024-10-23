@@ -1,4 +1,4 @@
-package ws
+package jfzt
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ const (
 	LB        = 300
 	WarnCheck = 2
 )
-const WSC = 4
+const WSC = 8
 
 var checkSecs = []int64{3, 10, 30, 60, 120, 300}
 var checkCnts = []int{10, 20, 30, 50, 100}
@@ -158,7 +158,7 @@ func startws(i int) {
 			//ws断开重启
 			log.Info("close ping chan")
 			close(stopc)
-			log.Infof("re start ws %d", i)
+			log.Infof("re start jfzt %d", i)
 			startws(i)
 			return
 		}
@@ -173,7 +173,7 @@ func startws(i int) {
 		if err != nil {
 			log.Error("json.Unmarshal error ", err)
 		} else {
-			//fmt.Printf("ws: %+v\n", r)
+			//fmt.Printf("jfzt: %+v\n", r)
 			MGR[i].handleRes(r)
 		}
 	}

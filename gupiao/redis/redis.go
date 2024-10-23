@@ -13,6 +13,8 @@ var cliRedis *redis.Client
 
 const HKey = "UserInfo"
 const AllID = "allgpid"
+const name2id = "name2id"
+const id2name = "id2name"
 
 type RedisCfg struct {
 	Addr string `json:"addr"`
@@ -98,4 +100,18 @@ func FixData(gid string) {
 		cliRedis.RPush(fmt.Sprintf("TurnoverRate.%v", gid), data_)
 	}
 	return
+}
+func Name2Id(name string) string {
+	xx, err := cliRedis.HGet(name2id, name).Result()
+	if err != nil {
+		return ""
+	}
+	return xx
+}
+func Id2Name(id string) string {
+	xx, err := cliRedis.HGet(id2name, id).Result()
+	if err != nil {
+		return ""
+	}
+	return xx
 }

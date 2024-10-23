@@ -95,14 +95,14 @@ func handleMsg(reply *Payload) {
 func connectWs() *Ws {
 	req := newRequest("GET", "/gateway", nil)
 	if req == nil {
-		log.Error("get ws url req error ")
+		log.Error("get jfzt url req error ")
 		return nil
 	}
 
 	cli := http.Client{}
 	resp, err := cli.Do(req)
 	if err != nil {
-		log.Error("get ws url error ", err)
+		log.Error("get jfzt url error ", err)
 		return nil
 	}
 	data, _ := io.ReadAll(resp.Body)
@@ -120,7 +120,7 @@ func connectWs() *Ws {
 	}
 	conn, _, err := dl.Dial(wsUrl, header)
 	if err != nil {
-		log.Error("connect ws error ", err)
+		log.Error("connect jfzt error ", err)
 		return nil
 	}
 	log.Info("send GateWay ")

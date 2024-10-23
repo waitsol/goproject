@@ -24,8 +24,11 @@ func GetUserFollowFromRedis(id string) *Follow {
 	x.Id = id
 	return x
 }
-func checkGpNum(s string) bool {
+func getRealGpNum(s string) string {
 
-	_, err := redis.GetInfoFromRedis(s)
-	return err == nil
+	num := redis.Name2Id(s)
+	return num
+}
+func Id2Name(s string) string {
+	return redis.Id2Name(s)
 }

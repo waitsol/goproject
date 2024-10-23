@@ -1,4 +1,4 @@
-package ws
+package jfzt
 
 import (
 	"fmt"
@@ -94,15 +94,13 @@ func (this *WsSet) Post(id, dq string) {
 		mId2Post[id] = Empty{}
 	}
 }
-func (this *WsSet) PostAndListen(uid, gid, dq string, w int) {
-	//当前没有post过
-	this.Post(gid, dq)
+func (this *WsSet) Listen(uid, gid string, w int) {
 
 	AddFollow(gid, uid, w)
 }
 func PostById(roleid, gid string, w int) {
 	id := hx(gid)
-	MGR[id].PostAndListen(roleid, gid, redis.GetDQ(gid), w)
+	MGR[id].Listen(roleid, gid, w)
 }
 func GetMgr(id string) *WsSet {
 	return MGR[hx(id)]

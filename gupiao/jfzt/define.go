@@ -1,4 +1,4 @@
-package ws
+package jfzt
 
 type Data_json struct {
 	SubType     string `json:"SubType"`

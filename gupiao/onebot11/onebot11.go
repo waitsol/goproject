@@ -17,6 +17,12 @@ var funcQueue = make(chan func(), 20)
 type Onebot11Ntf struct {
 }
 
+var id2qq = map[string]string{
+	"6DAADAFFBABD5C4CEF7DDDA35F6D1587": "1559556218",
+	"32":                               "529599322",
+	"2C7643552C78F85B0A381F23D0213852": "744581755",
+}
+
 func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 	id := m["id"]
 	if id != nil && len(id.(string)) > 0 {
@@ -33,7 +39,7 @@ func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 func (*Onebot11Ntf) sendMsg2user(context string, id string) {
 	url := "http://127.0.0.1:3000/send_msg"
 	body := map[string]interface{}{}
-	body["user_id"] = id
+	body["user_id"] = id2qq[id]
 	msg := map[string]interface{}{}
 	msg["type"] = "text"
 	msg["data"] = map[string]string{"text": context}
