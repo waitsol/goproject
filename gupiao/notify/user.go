@@ -76,7 +76,7 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 			if this.FollowsId[v[1]] == nil {
 				this.FollowsId[v[1]] = &FollowSt{Ok: false}
 			}
-			this.FollowsId[v[1]].WarnMsg = x * ws.OneHand
+			this.FollowsId[v[1]].WarnMsg = x
 			SaveUserFollow(*this)
 			ws.AddFollow(v[1], this.Id, this.FollowsId[v[1]].WarnMsg)
 			return true, "ok"
