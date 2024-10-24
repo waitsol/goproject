@@ -25,15 +25,15 @@ var id2qq = map[string]string{
 
 func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 	id := m["id"]
+
 	if id != nil && len(id.(string)) > 0 {
 		funcQueue <- func() {
-			x.sendMsg2user(context, id.(string)) //都发群
+			x.sendMsg2user(context, id.(string))
 		}
 	}
 	group_id := m["group_id"]
-	if group_id != nil && len(group_id.(string)) > 0 {
-		x.sendMsg2group(context, group_id.(string))
-
+	if m == nil || (group_id != nil && len(group_id.(string)) > 0) {
+		x.sendMsg2group(context, "")
 	}
 }
 func (*Onebot11Ntf) sendMsg2user(context string, id string) {

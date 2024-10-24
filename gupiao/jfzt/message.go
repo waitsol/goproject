@@ -4,6 +4,7 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"main/com"
+	"main/dfcf"
 	"main/dingding"
 	"main/onebot11"
 	"main/redis"
@@ -189,10 +190,12 @@ func updtatodd(x bool) {
 			if sts, ok := this.mId2BaseData[k]; ok {
 				base = sts.PreClosePrice
 			}
+			if k[:3] == "300" || k[:3] == "688" {
+				continue
+			}
 			if info, ok := this.mId2ConstInfo[k]; ok {
 				if GetRa(x.Price, base) > 9 && GetRa(x.Price, base) < 50 {
 					msgzt += fmt.Sprintf("%s  %s 大涨 %.2f%%\n", info.InstrumentID, info.InstrumentName, GetRa(x.Price, base))
-
 				}
 			}
 		}
@@ -279,6 +282,18 @@ func DsMsg() {
 
 		time.AfterFunc(diff, func() {
 			CheckTurnoverRate()
+		})
+	}
+	{
+		timeFormat := "2006-01-02 15:04"
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 21:10", time.Local)
+		diff := time.Now().Sub(end)
+
+		diff %= 86400 * time.Second
+		diff = 86400*time.Second - diff
+
+		time.AfterFunc(diff, func() {
+			dfcf.ScanHotStock()
 		})
 	}
 }
