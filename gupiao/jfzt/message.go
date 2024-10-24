@@ -286,7 +286,7 @@ func DsMsg() {
 	}
 	{
 		timeFormat := "2006-01-02 15:04"
-		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 21:10", time.Local)
+		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 21:30", time.Local)
 		diff := time.Now().Sub(end)
 
 		diff %= 86400 * time.Second
