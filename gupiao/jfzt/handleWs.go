@@ -78,7 +78,7 @@ func (this *WsSet) handleTick(r dataRes) {
 		}
 	}
 
-	if bflag && r.Inst == "601162" {
+	if bflag {
 		n := len(v)
 		//给关注这个股票的人发消息
 		load, ok := SyncId2Listener.Load(r.Inst)
@@ -104,14 +104,12 @@ func (this *WsSet) handleTick(r dataRes) {
 	}
 	if bcheck {
 		run := true
-		for _, sec := range checkSecs {
-			run = this.checkUnActionByTime(r.Inst, sec, run)
-		}
-		run = true
 		for _, cnt := range checkCnts {
 			run = this.checkUnActionByCount(r.Inst, cnt, run)
 		}
-
+		for _, sec := range checkSecs {
+			run = this.checkUnActionByTime(r.Inst, sec, run)
+		}
 	}
 
 	if sts, ok := this.mId2BaseData[r.Inst]; ok {
