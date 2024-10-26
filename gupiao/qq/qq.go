@@ -11,7 +11,7 @@ import (
 
 var AppID = "102452218"
 var AccessToken = "8WTKTDyD3IZW1rmfIJpB0WEuZDZVQ5NX"
-var url = "https://api.sgroup.qq.com"
+var url = "https://sandbox.api.sgroup.qq.com"
 var AppSecret = "nu19HPXfnv4DMVenw6GQaku4FQbmx8JV"
 
 type Payload struct {

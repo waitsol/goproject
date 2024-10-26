@@ -23,7 +23,7 @@ func sendMsg(msg, id, group_id string) {
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error("send msg error ", err)
+		log.Errorf("send msg data = %v error %v", msg, err)
 		return
 	}
 	data, _ = io.ReadAll(resp.Body)
