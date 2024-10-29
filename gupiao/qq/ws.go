@@ -2,11 +2,13 @@ package qq
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/waitsol/golib"
 	"io"
 	"main/notify"
+	"main/onebot11"
 	"net/http"
 	"os"
 	"time"
@@ -88,7 +90,9 @@ func handleMsg(reply *Payload) {
 		}
 		sendMsg(res, id, group_id)
 	} else {
-		sendMsg("哪里不对劲", "1", "1")
+		im := onebot11.Onebot11Ntf{}
+		xx := map[string]interface{}{"group_id": "13"}
+		im.SendMsg(fmt.Sprintf("哪里不对劲 %v", reply), xx)
 	}
 }
 

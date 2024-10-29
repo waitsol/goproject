@@ -18,7 +18,7 @@ func sendMsg(msg, id, group_id string) {
 	data, _ := json.Marshal(m)
 
 	req := newRequest("POST", "/v2/groups/"+group_id+"/messages", bytes.NewReader(data))
-
+	log.Infof("send %v", m)
 	//req.Body.Read(data)
 	client := http.Client{}
 	resp, err := client.Do(req)
