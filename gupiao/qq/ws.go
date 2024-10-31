@@ -66,7 +66,7 @@ func (ws *Ws) recvMsg() {
 		json.Unmarshal(b, &reply)
 		ws.s = reply.S
 		log.Info("recv ", string(b))
-		if reply.Op == 11 {
+		if reply.Op == 11 || reply.Op == 7 {
 			continue
 		}
 		handleMsg(&reply)
