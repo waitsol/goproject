@@ -73,7 +73,7 @@ func tingPan() {
 
 	diff %= 86400 * time.Second
 	diff = 86400*time.Second - diff
-	//time.Sleep(diff)
+	time.Sleep(diff)
 	for {
 		result := getgailiangu()
 		//什么板块大涨
