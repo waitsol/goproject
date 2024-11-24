@@ -25,7 +25,7 @@ var id2qq = map[string]string{
 
 func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 	id := m["id"]
-
+	log.Info("Onebot11Ntf ", context)
 	if id != nil && len(id.(string)) > 0 {
 		funcQueue <- func() {
 			x.sendMsg2user(context, id.(string))
