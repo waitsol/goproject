@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
+	"github.com/waitsol/golib"
 	"io"
 	"net/http"
 )
 
 func init() {
-	go loop()
+	golib.Go(func() {
+		loop()
+	})
 }
 
 var funcQueue = make(chan func(), 20)
@@ -25,6 +28,9 @@ var id2qq = map[string]string{
 
 func (x *Onebot11Ntf) SendMsg(context string, m map[string]interface{}) {
 	id := m["id"]
+	if context == "" {
+		return
+	}
 	log.Info("Onebot11Ntf ", context)
 	if id != nil && len(id.(string)) > 0 {
 		funcQueue <- func() {

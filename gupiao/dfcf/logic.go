@@ -2,6 +2,7 @@ package dfcf
 
 import (
 	"fmt"
+	"github.com/waitsol/golib"
 	"main/onebot11"
 	"sort"
 	"time"
@@ -11,11 +12,17 @@ var kaipan = map[string]float64{}
 var onebot = onebot11.Onebot11Ntf{}
 
 func init() {
-	go KaiPanIng()
-	go tingPan()
+	golib.Go(func() {
+		KaiPanIng()
+	})
+	golib.Go(
+		func() {
+			tingPan()
+		},
+	)
 }
 func KaiPanIng() {
-	go func() {
+	golib.Go(func() {
 		timeFormat := "2006-01-02 15:04"
 		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:00", time.Local)
 		diff := time.Now().Sub(end)
@@ -27,8 +34,7 @@ func KaiPanIng() {
 			kaipan = map[string]float64{}
 			time.Sleep(time.Hour * 24)
 		}
-
-	}()
+	})
 
 	for {
 		time.Sleep(time.Second * 30)
@@ -53,7 +59,7 @@ func KaiPanIng() {
 }
 
 func tingPan() {
-	go func() {
+	golib.Go(func() {
 		timeFormat := "2006-01-02 15:04"
 		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 12:00", time.Local)
 		diff := time.Now().Sub(end)
@@ -65,7 +71,7 @@ func tingPan() {
 			kaipan = map[string]float64{}
 			time.Sleep(time.Hour * 24)
 		}
-	}()
+	})
 
 	timeFormat := "2006-01-02 15:04"
 	end, _ := time.ParseInLocation(timeFormat, "2022-04-08 22:00", time.Local)

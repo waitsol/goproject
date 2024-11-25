@@ -399,9 +399,9 @@ func (this *WsSet) handleStatic(r dataRes) {
 
 func (this *WsSet) handleRes(r dataRes) {
 
-	if this.start && r.ServiceType == "TICK" {
+	if r.ServiceType == "TICK" {
 		this.handleTick(r)
-	} else if this.start && r.ServiceType == "DYNA" {
+	} else if r.ServiceType == "DYNA" {
 		this.handleDyna(r)
 	} else if r.ServiceType == "STATISTICS" {
 		this.handleSTATISTICS(r)
