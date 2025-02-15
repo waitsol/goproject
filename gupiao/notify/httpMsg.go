@@ -2,6 +2,7 @@ package notify
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -108,22 +109,23 @@ func add(c *gin.Context) {
 	}
 
 }
+func dingding(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
+		return
+	}
+
+	log.Info("xxxx get body ", body)
+	c.JSON(200, "ok")
+}
+
 func Run() {
 	loadFollow()
 	router := gin.Default()
-	router.LoadHTMLGlob("v1/*.html")
 
-	v1 := router.Group("/v1")
-	v1.GET("handle", handle)
-	v1.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", gin.H{})
-	})
-	v1.POST("/login", login)
-	v1.POST("/add", add)
-	v1.POST("/list", list)
-	v1.POST("/clear", clear)
-	v1.POST("/set", set)
+	router.POST("/dingding", dingding)
 	golib.Go(func() {
-		router.Run("0.0.0.0:9876")
+		router.Run("0.0.0.0:7789")
 	})
 }

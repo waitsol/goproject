@@ -7,7 +7,6 @@ import (
 	_ "main/log"
 	"main/notify"
 	_ "main/onebot11"
-	"main/qq"
 	_ "main/redis"
 )
 
@@ -21,7 +20,7 @@ func InitVal() {
 
 func main() {
 
-	qq.Main()
+	//qq.Main()
 	InitVal()
 	notify.Run()
 

@@ -37,8 +37,7 @@ func SetFollowMinRa(gid, uid string, val float64) {
 }
 
 func SendMsg(id, msg string, send_group bool) {
-	//MsgChan <- MsgType{id, msg}
-	//dingding.DdMsg <- dingding.DDMsgType{Id: id, Msg: msg}
+
 	if MGR[0].start {
 		m := map[string]interface{}{}
 		m["id"] = id

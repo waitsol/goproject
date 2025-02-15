@@ -52,6 +52,7 @@ func init() {
 		//panic("redis no url")
 	}
 	dingding.DDURL = url
+	dingding.DDURL = "https://oapi.dingtalk.com/robot/send?access_token=127c182e1426e19342fbc5ca56f6c036e999b8f99d6ecd70c63e8ab25c8c0376"
 	log.Info(dingding.DDURL)
 }
 func SaveUser(name string, bitdata []byte) {

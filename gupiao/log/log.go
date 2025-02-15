@@ -21,8 +21,8 @@ func (f *Formatter) Format(entry *log.Entry) ([]byte, error) {
 		buffer = bytes.NewBuffer(tmp)
 	}
 	//[时间][函数][文件][行]:data
-	line := fmt.Sprintf("[%s][%s][%s][%d]:%s\n", entry.Time.Format(time.TimeOnly), path.Base(entry.Caller.Func.Name()),
-		path.Base(entry.Caller.File), entry.Caller.Line, entry.Message,
+	line := fmt.Sprintf("[%s][%s][%s][%d][%s]:%s\n", entry.Time.Format(time.TimeOnly), path.Base(entry.Caller.Func.Name()),
+		path.Base(entry.Caller.File), entry.Caller.Line, entry.Level, entry.Message,
 	)
 	buffer.WriteString(line)
 	return buffer.Bytes(), nil

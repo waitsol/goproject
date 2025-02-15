@@ -6,7 +6,6 @@ import (
 	"main/com"
 	"main/dfcf"
 	"main/dingding"
-	"main/onebot11"
 	"main/redis"
 	"sync/atomic"
 	"time"
@@ -17,7 +16,7 @@ var (
 )
 
 func init() {
-	im = &onebot11.Onebot11Ntf{}
+	im = &dingding.DingDingNtf{}
 }
 
 func (this *WsSet) Ping(stopc chan bool) {

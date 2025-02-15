@@ -23,7 +23,7 @@ type Response struct {
 
 var DDURL string
 
-const KeywordMonitor = "hq"
+const KeywordMonitor = ":"
 
 type DDMsgType struct {
 	Id  string
@@ -38,7 +38,24 @@ type AtMsg struct {
 	AtUserIds []string `json:"atUserIds"`
 	IsAtAll   bool     `json:"isAtAll"`
 }
+type DingDingNtf struct {
+}
 
+var id2qq = map[string]string{
+	"6DAADAFFBABD5C4CEF7DDDA35F6D1587": "1559556218",
+	"4EDC73C71CBA7AD5730606F42BA19204": "529599322",
+	"2C7643552C78F85B0A381F23D0213852": "744581755",
+}
+
+func init() {
+	go RecvDDMsg()
+}
+func (x *DingDingNtf) SendMsg(context string, m map[string]interface{}) {
+	id, ok := m["id"].(string)
+	if ok { //推送到缓存
+		DdMsg <- DDMsgType{Id: id, Msg: context}
+	}
+}
 func init() {
 	client = &http.Client{Timeout: 5 * time.Second}
 	DdMsg = make(chan DDMsgType, 100)
@@ -84,7 +101,8 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 
 	resp, err := client.Post(DDURL, "application/json", bytes.NewReader(body))
 	if err != nil {
-		log.Error(err)
+
+		log.Errorf("body = %s,err = %v", string(body), err)
 	} else {
 		log.Info(resp)
 	}
