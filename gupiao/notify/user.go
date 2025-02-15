@@ -65,6 +65,7 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 	if len(v) == 0 {
 		return false, "填的什么玩意"
 	}
+	v[0] = "/" + v[0]
 	if v[0] == "/u" && len(v) == 2 && getRealGpNum(v[1]) != "" {
 
 		return true, this.follow(getRealGpNum(v[1]))
@@ -90,7 +91,7 @@ func (this *Follow) HandleMessage(msg string) (bool, string) {
 	} else if v[0] == "/clear" {
 		this.clearUserFollow(this.Id)
 		return true, "ok"
-	} else if v[0] == "/Info" {
+	} else if v[0] == "/info" {
 		result := "\n"
 		for k, v := range this.FollowsId {
 			result = fmt.Sprintf("%s%s : %d 监听:%v\n", result, Id2Name(k), v.WarnMsg, v.Ok)

@@ -1,8 +1,10 @@
 package notify
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"main/dingding"
 	"net/http"
 	"strings"
 
@@ -109,22 +111,27 @@ func add(c *gin.Context) {
 	}
 
 }
-func dingding(c *gin.Context) {
+func dingding_hander(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
 		return
 	}
+	msg := dingding.POSTMSG{}
+	json.Unmarshal(body, &msg)
 
-	log.Info("xxxx get body ", body)
-	c.JSON(200, "ok")
+	log.Info("xxxx get body ", msg)
+	_, rsp := GetFollow(msg.SenderNick).HandleMessage(msg.Text.Content)
+	ntf := dingding.DingDingNtf{}
+	ntf.SendMsg(rsp, map[string]interface{}{"id": msg.SenderNick})
+	c.JSON(101, rsp)
 }
 
 func Run() {
 	loadFollow()
 	router := gin.Default()
 
-	router.POST("/dingding", dingding)
+	router.POST("/dingding", dingding_hander)
 	golib.Go(func() {
 		router.Run("0.0.0.0:7789")
 	})

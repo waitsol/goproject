@@ -3,10 +3,11 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
-	log "github.com/sirupsen/logrus"
 	"main/dingding"
 	"os"
+
+	"github.com/go-redis/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 var cliRedis *redis.Client
@@ -52,7 +53,7 @@ func init() {
 		//panic("redis no url")
 	}
 	dingding.DDURL = url
-	dingding.DDURL = "https://oapi.dingtalk.com/robot/send?access_token=127c182e1426e19342fbc5ca56f6c036e999b8f99d6ecd70c63e8ab25c8c0376"
+	dingding.DDURL = "https://oapi.dingtalk.com/robot/send?access_token=6982ee152bc9709ce56301cb8fc3de7d2b63a31c73e19dbca3b6f360374f85ad"
 	log.Info(dingding.DDURL)
 }
 func SaveUser(name string, bitdata []byte) {

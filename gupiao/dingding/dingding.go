@@ -47,6 +47,33 @@ var id2qq = map[string]string{
 	"2C7643552C78F85B0A381F23D0213852": "744581755",
 }
 
+type POSTMSG struct {
+	SenderPlatform string `json:"senderPlatform"`
+	ConversationId string `json:"conversationId"`
+	AtUsers        []struct {
+		DingtalkId string `json:"dingtalkId"`
+	} `json:"atUsers"`
+	ChatbotCorpId             string `json:"chatbotCorpId"`
+	ChatbotUserId             string `json:"chatbotUserId"`
+	MsgId                     string `json:"msgId"`
+	SenderNick                string `json:"senderNick"`
+	IsAdmin                   bool   `json:"isAdmin"`
+	SenderStaffId             string `json:"senderStaffId"`
+	SessionWebhookExpiredTime int64  `json:"sessionWebhookExpiredTime"`
+	CreateAt                  int64  `json:"createAt"`
+	SenderCorpId              string `json:"senderCorpId"`
+	ConversationType          string `json:"conversationType"`
+	SenderId                  string `json:"senderId"`
+	ConversationTitle         string `json:"conversationTitle"`
+	IsInAtList                bool   `json:"isInAtList"`
+	SessionWebhook            string `json:"sessionWebhook"`
+	Text                      struct {
+		Content string `json:"content"`
+	} `json:"text"`
+	RobotCode string `json:"robotCode"`
+	Msgtype   string `json:"msgtype"`
+}
+
 func init() {
 	go RecvDDMsg()
 }
@@ -61,6 +88,13 @@ func init() {
 	DdMsg = make(chan DDMsgType, 100)
 }
 
+var urlIdx = 0
+var urlArr = []string{"https://oapi.dingtalk.com/robot/send?access_token=b428571250dd3e9a82311b26a0001e0a62fcad02690f3d66a6d3c2dc6cae5d31",
+	"https://oapi.dingtalk.com/robot/send?access_token=287f75ff42faab4ca8d088e8ab4b94619f7b3409e309bd213b312dc940fd9ac0",
+	"https://oapi.dingtalk.com/robot/send?access_token=96c4e0413e790f7650e86514a3d5b0977d84b52d6cc983e4f2c84337b8dcce0e",
+	"https://oapi.dingtalk.com/robot/send?access_token=b78271cb4b584719efb411c006b65ebf83ceab99e32e50bf233732e2abf8253d",
+	"https://oapi.dingtalk.com/robot/send?access_token=6982ee152bc9709ce56301cb8fc3de7d2b63a31c73e19dbca3b6f360374f85ad"}
+
 // 发送简单文本消息
 func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err error) {
 	defer func() {
@@ -69,11 +103,11 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 		}
 	}()
 	if com.IsSend() == false {
-		return nil
+		//	return nil
 	}
 	text := map[string]string{}
 	at := AtMsg{}
-	text["content"] = messagePrefix + ":" + "\n"
+	text["content"] = messagePrefix + ""
 	for _, x := range messageContent {
 
 		who := x.Id
@@ -81,7 +115,7 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 			who = "所有人"
 		}
 
-		text["content"] = text["content"] + "@" + who + x.Msg + "\n"
+		text["content"] = text["content"] + "\n" + x.Msg + "\n" + "@" + who
 
 		at.AtMobiles = append(at.AtMobiles, x.Id)
 		if len(x.Id) == 1 {
@@ -98,7 +132,12 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 	}
 
 	body, _ := json.Marshal(postData)
+	urlIdx++
+	if urlIdx >= len(urlArr) {
+		urlIdx = 0
 
+	}
+	DDURL = urlArr[urlIdx]
 	resp, err := client.Post(DDURL, "application/json", bytes.NewReader(body))
 	if err != nil {
 
@@ -110,7 +149,7 @@ func SendDingTalkMessage(messageContent []DDMsgType, messagePrefix string) (err 
 }
 
 func RecvDDMsg() { //钉钉缓存
-	tick := time.NewTicker(4 * time.Second)
+	tick := time.NewTicker(500 * time.Millisecond)
 	cache := map[string]string{}
 	for {
 		select {
