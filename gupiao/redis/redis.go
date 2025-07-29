@@ -46,7 +46,7 @@ func init() {
 		DB:       0,      // use default DB
 	})
 	if nil != cliRedis.Ping().Err() {
-		panic("redis connect error")
+		//panic("redis connect error")
 	}
 	url, err := cliRedis.Get("wmurl").Result()
 	if err != nil || len(url) == 0 {

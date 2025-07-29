@@ -1,11 +1,13 @@
 package main
 
 import (
+	"main/TcpNet"
 	"main/jfzt"
 	_ "main/log"
 	"main/notify"
 	_ "main/onebot11"
 	_ "main/redis"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/waitsol/golib"
@@ -20,6 +22,10 @@ func InitVal() {
 }
 
 func main() {
+
+	go TcpNet.Run()
+
+	time.Sleep(time.Hour)
 
 	//qq.Main()
 	InitVal()

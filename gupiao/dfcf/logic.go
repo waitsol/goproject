@@ -22,6 +22,7 @@ func init() {
 	)
 }
 func KaiPanIng() {
+	time.Sleep(time.Hour)
 	golib.Go(func() {
 		timeFormat := "2006-01-02 15:04"
 		end, _ := time.ParseInLocation(timeFormat, "2022-04-08 18:00", time.Local)

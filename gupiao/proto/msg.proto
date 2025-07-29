@@ -1,0 +1,28 @@
+syntax = "proto3";
+option go_package = "main/pb3";
+message CSBuyOrSellReq
+{
+  optional  bool        is_buy  = 1;
+  optional  string      code    = 2;
+  optional  string      money   = 3;
+  optional  string      num     = 4;
+}
+message CSBuyOrSellRsp
+{
+  optional int32 result = 1;
+  optional CSBuyOrSellReq req = 2;
+}
+
+
+message PacketReq
+{
+  oneof packet{
+      CSBuyOrSellReq bs = 1;
+  }
+}
+message PacketRsp
+{
+  oneof packet{
+    CSBuyOrSellRsp bs = 1;
+  }
+}
