@@ -2,24 +2,27 @@ package dfcf
 
 import (
 	"fmt"
-	"github.com/waitsol/golib"
 	"main/onebot11"
+	"main/redis"
 	"sort"
+	"strconv"
 	"time"
+
+	"github.com/waitsol/golib"
 )
 
 var kaipan = map[string]float64{}
 var onebot = onebot11.Onebot11Ntf{}
 
 func init() {
-	golib.Go(func() {
-		KaiPanIng()
-	})
-	golib.Go(
-		func() {
-			tingPan()
-		},
-	)
+	// golib.Go(func() {
+	// 	KaiPanIng()
+	// })
+	// golib.Go(
+	// 	func() {
+	// 		tingPan()
+	// 	},
+	// )
 }
 func KaiPanIng() {
 	time.Sleep(time.Hour)
@@ -107,4 +110,49 @@ func tingPan() {
 		onebot.SendMsg(ntf, nil)
 		time.Sleep(time.Hour * 24)
 	}
+}
+
+// 获取股票资金情况 近4分钟的情况,当前值,最大值,最小值
+func GetStockFundInfo(stockId string) (int, int, int, int) {
+	vec := PullFundInfo(stockId, redis.GetDQ(stockId))
+	if len(vec) == 0 {
+		return -1000, 0, 0, 0
+	}
+	cur := 0
+	vmax := -0x3f3f3f3f3f
+	vmin := 0x3f3f3f3f3f
+	qushi := 0
+
+	for _, x := range vec {
+		vf, _ := strconv.ParseFloat(x, 64)
+		vx := int(vf)
+		if vx > vmax {
+			vmax = vx
+		}
+		if vx < vmin {
+			vmin = vx
+		}
+		cur = vx
+	}
+
+	qmax := -0x3f3f3f3f3f
+	qmin := 0x3f3f3f3f3f
+
+	for i := max(0, len(vec)-15); i < len(vec); i++ {
+		vf, _ := strconv.ParseFloat(vec[i], 64)
+		vx := int(vf)
+		if vx > qmax {
+			qmax = vx
+		}
+		if vx < qmin {
+			qmin = vx
+		}
+	}
+	if qmax-cur > cur-qmin {
+		qushi = cur - qmax
+	} else {
+		qushi = cur - qmin
+	}
+
+	return qushi / 10000, cur / 10000, vmax / 10000, vmin / 10000
 }

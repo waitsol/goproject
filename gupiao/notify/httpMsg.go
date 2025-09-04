@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	user "main/User"
 	"main/dingding"
 	"net/http"
 	"strings"
@@ -32,7 +33,7 @@ func handle(c *gin.Context) {
 	id := c.Query("id")
 	msg := c.Query("msg")
 	log.Info(msg)
-	b, res := GetFollow(id).HandleMessage(msg)
+	b, res := user.GetFollow(id).HandleMessage(msg)
 	if b {
 		c.JSON(200, MsgRes{Res: res})
 
@@ -48,7 +49,7 @@ func innerHandler(c *gin.Context, id string, args ...string) {
 		}
 		msg += x
 	}
-	b, res := GetFollow(id).HandleMessage(msg)
+	b, res := user.GetFollow(id).HandleMessage(msg)
 	fmt.Println("ret", res)
 	if b {
 		h := strings.ReplaceAll(res, "\n", "    ")
@@ -121,14 +122,14 @@ func dingding_hander(c *gin.Context) {
 	json.Unmarshal(body, &msg)
 
 	log.Info("xxxx get body ", msg)
-	_, rsp := GetFollow(msg.SenderNick).HandleMessage(msg.Text.Content)
+	_, rsp := user.GetFollow(msg.SenderNick).HandleMessage(msg.Text.Content)
 	ntf := dingding.DingDingNtf{}
 	ntf.SendMsg(rsp, map[string]interface{}{"id": msg.SenderNick})
 	c.JSON(101, rsp)
 }
 
 func Run() {
-	loadFollow()
+	user.LoadFollow()
 	router := gin.Default()
 
 	router.POST("/dingding", dingding_hander)

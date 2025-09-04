@@ -20,7 +20,7 @@ func sim_send() {
 
 	time.Sleep(time.Second * 2)
 	*bs.Code = "603716"
-	*bs.Money = "31.67"
+	*bs.Money = "33.67"
 	*bs.Num = "100"
 	*bs.IsBuy = true
 	log.Info("......chan.....")
@@ -29,21 +29,21 @@ func sim_send() {
 
 	time.Sleep(time.Second * 2)
 	*bs.Code = "301078"
-	*bs.Money = "14"
+	*bs.Money = "13"
 	*bs.Num = "100"
 	*bs.IsBuy = true
 	ipc.ReqChan <- *req
 
 	time.Sleep(time.Second * 2)
 	*bs.Code = "600203"
-	*bs.Money = "12"
+	*bs.Money = "15.2"
 	*bs.Num = "100"
 	*bs.IsBuy = false
 	ipc.ReqChan <- *req
 
 	time.Sleep(time.Second * 2)
 	*bs.Code = "003023"
-	*bs.Money = "27"
+	*bs.Money = "23"
 	*bs.Num = "100"
 	*bs.IsBuy = false
 	ipc.ReqChan <- *req
@@ -69,7 +69,7 @@ func Run() {
 			log.Infof("接受连接失败:", err)
 			continue
 		}
-		go sim_send()
+		//go sim_send()
 		// 为每个连接创建 goroutine 处理
 		handleConnection(conn)
 	}

@@ -2,13 +2,15 @@ package jfzt
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	user "main/User"
 	"main/com"
 	"main/dfcf"
 	"main/dingding"
 	"main/redis"
 	"sync/atomic"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -96,7 +98,7 @@ func (this *WsSet) Post(id, dq string) {
 }
 func (this *WsSet) Listen(uid, gid string, w int) {
 
-	AddFollow(gid, uid, w)
+	user.AddFollow(gid, uid, w)
 }
 func PostById(roleid, gid string, w int) {
 	id := hx(gid)
@@ -291,8 +293,8 @@ func DsMsg() {
 		diff %= 86400 * time.Second
 		diff = 86400*time.Second - diff
 
-		time.AfterFunc(diff, func() {
-			dfcf.ScanHotStock()
-		})
+		// time.AfterFunc(diff, func() {
+		// 	dfcf.ScanHotStock()
+		// })
 	}
 }

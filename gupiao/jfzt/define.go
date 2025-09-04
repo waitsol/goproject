@@ -228,9 +228,3 @@ func (this *VRa) GetAvg() float64 {
 	}
 	return this.sum / float64(len(this.q))
 }
-
-type followInfo struct {
-	num   int
-	maxRa float64
-	minRa float64
-}

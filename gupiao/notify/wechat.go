@@ -2,6 +2,7 @@ package notify
 
 import (
 	"fmt"
+	user "main/User"
 	. "main/ipc"
 	"time"
 
@@ -25,7 +26,7 @@ func messageHandler(msg *openwechat.Message) {
 			return
 		}
 		fmt.Println(sender.ID(), sender.RemarkName, sender.NickName, sender == Self.User)
-		b, s := GetFollow(sender.ID()).HandleMessage(msg.RawContent)
+		b, s := user.GetFollow(sender.ID()).HandleMessage(msg.RawContent)
 		if b {
 			msg.ReplyText(s)
 		} else {
@@ -100,7 +101,7 @@ func RunWechat(ch chan struct{}) {
 		Mgr[f.ID()] = f
 	}
 	golib.Go(RecvMsg)
-	loadFollow()
+	user.LoadFollow()
 	ch <- struct{}{}
 
 	bot.Block()

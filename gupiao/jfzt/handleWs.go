@@ -2,18 +2,42 @@ package jfzt
 
 import (
 	"fmt"
+	user "main/User"
+	"main/quantitative"
 	"runtime/debug"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
+func (this *WsSet) Stock(inst string) *Stock {
+	stock := this.stock[inst]
+	if stock == nil {
+		stock = &Stock{
+			hl:        HL{},
+			baseData:  StatisticType{},
+			constInfo: StaticType{},
+			tick:      make([]TickType, 0, 50), // 建议预分配合理容量
+			dyna:      make([]DynaType, 0, 50),
+			lb:        &VRa{sum: 0}, // 如果 VRa 也需要初始化
+			up:        KvInfo{0, 0, 0},
+			down:      KvInfo{0, 0, 0},
+			buy:       TsInfo{},
+			sell:      TsInfo{},
+			msFlag:    make([]bool, 10),
+		}
+		this.stock[inst] = stock
+	}
+	stock.msFlag[0] = true
+	return stock
+}
+
 // 股票异动
 func (this *WsSet) handleTick(r dataRes) {
 	muban := ""
 	v := []int{}
 	str := []string{}
-
+	stock := this.Stock(r.Inst)
 	//ramsg := ""
 	//bra := false
 	if info, ok := this.mId2ConstInfo[r.Inst]; ok {
@@ -29,6 +53,9 @@ func (this *WsSet) handleTick(r dataRes) {
 	if len(this.mId2Tick[r.Inst]) > 0 {
 		lastPirce = this.mId2Tick[r.Inst][len(this.mId2Tick[r.Inst])-1].Price
 	}
+	if r.Inst != "601606" {
+		return
+	}
 	//之前成交量数据
 	ra, _ok := this.mId2LB[r.Inst]
 	if !_ok {
@@ -38,35 +65,92 @@ func (this *WsSet) handleTick(r dataRes) {
 	for _, x := range r.QuoteData.TickData {
 		bcheck = true
 		this.mId2Tick[r.Inst] = append(this.mId2Tick[r.Inst], x)
-		//这次一共多少钱
-		//tprice := x.Price * float64(x.Volume)
 
-		//if this.mId2Time[r.Inst]+20 < x.Time && tprice/ra.GetAvg() >= WarnRatio {
-		//	log.WithFields(log.Fields{
-		//		"tprice/ra.GetAvg()": tprice / ra.GetAvg(),
-		//		"tprice":             tprice,
-		//		"ra.GetAvg()":        ra.GetAvg(),
-		//		" r.Inst":            r.Inst,
-		//	}).Info("tick波动 ")
-		//	//	bra = true
-		//	this.mId2Time[r.Inst] = x.Time
-		//}
-		//ra.Push(VRaInnner{val: tprice, t: x.Time})
+		base := x.Price
+		if sts, ok := this.mId2BaseData[r.Inst]; ok {
+			base = sts.PreClosePrice
+		} else {
+			log.WithField("inst", r.Inst).Error("base empty")
+		}
+		bigSell := time.Now().Unix() - stock.bigSell
+
+		bigBuy := time.Now().Unix() - stock.bigBuy
+
+		ratio := GetRa(x.Price, base)
+		msIdx := 0
+		if ratio >= quantitative.S3 {
+			msIdx = 1
+		} else if ratio >= quantitative.S2 {
+			msIdx = 2
+
+		} else if ratio >= quantitative.S1 {
+			msIdx = 3
+
+		} else if ratio <= quantitative.B3 {
+			msIdx = 4
+
+		} else if ratio <= quantitative.B2 {
+			msIdx = 5
+
+		} else if ratio <= quantitative.B1 {
+			msIdx = 6
+		}
+		if !stock.msFlag[msIdx] {
+			stock.msFlag[msIdx] = true
+			if ratio > 0 && bigBuy > 10 {
+				log.Infof("%v zz Sell ,ratio=%.2f ", r.Inst, ratio)
+				quantitative.Sell(r.Inst, ratio, x.Price, 0)
+			} else if bigSell > 10 {
+				log.Infof("%v zz Buy ,ratio=%.2f ", r.Inst, ratio)
+
+				quantitative.Buy(r.Inst, ratio, x.Price, 0)
+			}
+		}
+
 		if x.Price >= lastPirce {
 			ch = "↑"
+			stock.up.cnt++
+			stock.up.val += int64(x.Price) * int64(x.Volume)
+			if stock.up.cnt == 1 {
+				stock.up.begin = x.Price
+			}
+			if stock.up.cnt == 2 {
+				//抄底买
+				xRa := GetRa(stock.down.begin, base)
+				if xRa-ratio > 1 {
+					log.Infof("%v zz buy stock.down.cnt = %d,ratio=%.2f xRa = %.2f", r.Inst, stock.down.cnt, ratio, xRa)
+					quantitative.Buy(r.Inst, ratio, x.Price, xRa)
+				}
+				stock.down.Reset()
+			}
 		} else {
 			ch = "↓"
+			stock.down.cnt++
+			stock.down.val += int64(x.Price) * int64(x.Volume)
+			if stock.down.cnt == 1 {
+				stock.down.begin = x.Price
+			}
+			if stock.down.cnt == 2 {
+				//拉高回调卖
+				xRa := GetRa(stock.up.begin, base)
+				if ratio-xRa > 3 {
+					log.Infof("%v zz sell stock.up.cnt = %d,ratio=%.2f xRa = %.2f", r.Inst, stock.up.cnt, ratio, xRa)
+					quantitative.Sell(r.Inst, ratio, x.Price, xRa)
+				}
+				stock.up.Reset()
+			}
 		}
 		lastPirce = x.Price
-		if x.Volume > 200*OneHand {
-			base := x.Price
-			if sts, ok := this.mId2BaseData[r.Inst]; ok {
-				base = sts.PreClosePrice
+		xishu := int(max(base/10, 1)) //10块钱是一万手算大单
+
+		if x.Volume > 10000*OneHand/xishu {
+			if ch == "↓" {
+				stock.bigSell = time.Now().Unix()
 			} else {
-				log.WithField("inst", r.Inst).Error("base empty")
+				stock.bigBuy = time.Now().Unix()
 			}
 			bflag = true
-			if GetRa(x.Price, base) < 22 {
+			if ratio < 22 {
 				str = append(str, fmt.Sprintf("%.02f%%   %.02f%s   %d\n", GetRa(x.Price, base), x.Price, ch, x.Volume/OneHand))
 				//log.Info(str)
 				v = append(v, x.Volume)
@@ -75,21 +159,22 @@ func (this *WsSet) handleTick(r dataRes) {
 					"x.Price": x.Price, "base": base, "GetRa(x.Price, base)": GetRa(x.Price, base),
 				}).Error("tick 计算错误")
 			}
+		} else {
 		}
 	}
 
 	if bflag {
 		n := len(v)
 		//给关注这个股票的人发消息
-		load, ok := SyncId2Listener.Load(r.Inst)
+		load, ok := user.SyncId2Listener.Load(r.Inst)
 		if ok {
-			listens := load.(map[string]*followInfo)
+			listens := load.(map[string]*user.FollowInfo)
 			bF := true
 			for name, info := range listens {
 				smsg := muban
 				bflag = false
 				for i := 0; i < n; i++ {
-					if v[i] >= info.num*OneHand {
+					if v[i] >= info.Num*OneHand {
 						smsg += str[i]
 						bflag = true
 					}
@@ -115,20 +200,20 @@ func (this *WsSet) handleTick(r dataRes) {
 	if sts, ok := this.mId2BaseData[r.Inst]; ok {
 		base := sts.PreClosePrice
 		curra := GetRa(lastPirce, base)
-		load, ok := SyncId2Listener.Load(r.Inst)
+		load, ok := user.SyncId2Listener.Load(r.Inst)
 		if ok {
-			listens := load.(map[string]*followInfo)
+			listens := load.(map[string]*user.FollowInfo)
 
 			for id := range listens {
 				x := listens[id]
 				if x != nil {
-					if curra >= x.maxRa {
-						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.maxRa, curra), false)
-						x.maxRa = 200 //就提醒一次
+					if curra >= x.MaxRa {
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.MaxRa, curra), false)
+						x.MaxRa = 200 //就提醒一次
 					}
-					if curra <= x.minRa {
-						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.minRa, curra), false)
-						x.minRa = -200
+					if curra <= x.MinRa {
+						SendMsg(id, fmt.Sprintf("%s %f 超过提醒值 %f ", muban, x.MinRa, curra), false)
+						x.MinRa = -200
 					}
 				}
 			}
@@ -136,7 +221,7 @@ func (this *WsSet) handleTick(r dataRes) {
 	}
 	//
 	//if bra {
-	//	load, ok := SyncId2Listener.Load(r.Inst)
+	//	load, ok := user.SyncId2Listener.Load(r.Inst)
 	//	if ok {
 	//		listens := load.(map[string]int)
 	//		for name, _ := range listens {
@@ -148,11 +233,11 @@ func (this *WsSet) handleTick(r dataRes) {
 	//}
 }
 func SendMsg2Listen(inst, msg string) {
-	load, ok := SyncId2Listener.Load(inst)
+	load, ok := user.SyncId2Listener.Load(inst)
 	if ok {
-		listens := load.(map[string]*followInfo)
+		listens := load.(map[string]*user.FollowInfo)
 		flag := true
-		for name, _ := range listens {
+		for name := range listens {
 			SendMsg(name, msg, flag)
 			flag = false
 		}
@@ -325,7 +410,7 @@ func (this *WsSet) checkUnActionMaxMin(r dataRes) {
 
 					if (ratio1/0.49 != ratio2/0.49) && (ratio3-ratio1 > WarnHL) {
 						SendMsg2Listen(r.Inst, fmt.Sprintf("%s 新低↓↓↓\n%.2f%%  %.2f%%\n", muban, ratio3, ratio1))
-						log.Infof("%s 新高↑↑↑\n%.2f%%  %.2f%% inst = %s %.2f %.2f\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
+						log.Infof("%s 新低↓↓↓\n%.2f%%  %.2f%% inst = %s %.2f %.2f\n", muban, ratio1, ratio3, r.Inst, x.Max, x.Min)
 
 					}
 				}
@@ -400,7 +485,9 @@ func (this *WsSet) handleStatic(r dataRes) {
 func (this *WsSet) handleRes(r dataRes) {
 
 	if r.ServiceType == "TICK" {
-		this.handleTick(r)
+		if MGR[0].start {
+			this.handleTick(r)
+		}
 	} else if r.ServiceType == "DYNA" {
 		this.handleDyna(r)
 	} else if r.ServiceType == "STATISTICS" {
@@ -408,4 +495,5 @@ func (this *WsSet) handleRes(r dataRes) {
 	} else if r.ServiceType == "STATIC" {
 		this.handleStatic(r)
 	}
+
 }

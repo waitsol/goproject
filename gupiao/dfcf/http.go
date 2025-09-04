@@ -3,7 +3,6 @@ package dfcf
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"main/com"
 	"main/onebot11"
@@ -11,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/waitsol/golib"
 )
 
 type _stockLine struct {
@@ -256,4 +258,54 @@ func getgailiangu() map[string]concept {
 	}
 
 	return ret
+}
+
+// 获取股票的资金情况
+func PullFundInfo(stockId, flag string) []string {
+	/*sz = 0 sh 1*/
+	switch flag {
+	case "sz":
+		flag = "0"
+	case "sh":
+		flag = "1"
+	default:
+		log.Error("flag error ", flag)
+		return nil
+	}
+
+	url := fmt.Sprintf("https://push2.eastmoney.com/api/qt/stock/fflow/kline/get?"+
+		"lmt=0&klt=1&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63,f64,f65"+
+		"&ut=b2884a393a59ad64002292a3e90d46a5&secid=%s.%s&_=%d", flag, stockId, time.Now().UnixMilli())
+
+	log.Info("-----------------", url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	body, _ := io.ReadAll(resp.Body)
+	m := make(map[string]interface{})
+	json.Unmarshal(body, &m)
+	//log.Info(string(body))
+	data, ok := m["data"].(map[string]interface{})
+	if ok {
+
+		klines, ok := data["klines"].([]interface{})
+		if ok {
+			log.Infof("klines len = %d", len(klines))
+			ret := []string{}
+			for _, kline := range klines {
+				strLine, ok := kline.(string)
+				if ok {
+					vec := golib.StringSplit(strLine, ',')
+					//	log.Info(vec)
+					ret = append(ret, vec[1])
+				}
+			}
+			return ret
+		}
+
+	}
+	return nil
 }

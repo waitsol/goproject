@@ -41,8 +41,7 @@ type Empty struct {
 
 var reqid int32 = 1
 
-// 监听者
-var SyncId2Listener sync.Map
+
 
 var MGR []*WsSet
 
@@ -138,7 +137,8 @@ func startws(i int) {
 	}
 	MGR[i].Init()
 	MGR[i].conn = conn
-	if time.Now().Hour() >= 15 || time.Now().Hour() <= 9 {
+	if time.Now().Hour() >= 15 || time.Now().Hour() <= 8 {
+		log.Info("time.Now().Hour() = ",time.Now().Hour())
 		MGR[i].Stop()
 	}
 
