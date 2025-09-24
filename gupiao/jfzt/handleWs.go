@@ -117,7 +117,7 @@ func (this *WsSet) handleTick(r dataRes) {
 			if stock.up.cnt == 2 {
 				//抄底买
 				xRa := GetRa(stock.down.begin, base)
-				if xRa-ratio > 1 {
+				if xRa-ratio > 3 {
 					log.Infof("%v zz buy stock.down.cnt = %d,ratio=%.2f xRa = %.2f", r.Inst, stock.down.cnt, ratio, xRa)
 					quantitative.Buy(r.Inst, ratio, x.Price, xRa)
 				}

@@ -23,6 +23,7 @@ func InitVal() {
 func simInfo(code string, all, base, fund int) {
 	user.GetDefaultFollow().FollowsId[code] = &user.FollowSt{}
 	user.GetDefaultFollow().FollowsId[code].All = all
+	user.GetDefaultFollow().FollowsId[code].CanSend = all
 	user.GetDefaultFollow().FollowsId[code].BaseHave = base
 	user.GetDefaultFollow().FollowsId[code].Fund = fund
 }
